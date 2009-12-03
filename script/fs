@@ -1,0 +1,62 @@
+#!/usr/bin/env ruby
+
+require 'fusefs'
+require 'rubygems'
+require 'couchrest'
+require 'json'
+
+
+MOUNT_DIR = File.expand_path(File.join(File.dirname(__FILE__), '../app'))
+DB = CouchRest.database("http://127.0.0.1:5984/nashi-01-development")
+
+class CouchDir < FuseFS::FuseDir
+  # / ModelName / views / ViewName / FunctionName
+  def contents(path)
+    if path == "/"
+      r = DB.documents :startkey => "_design/", :endkey => "_design/_", :include_docs => true
+      r["rows"].map { |e| e["id"].sub(/\A_design\//, '') }.flatten.sort
+    elsif path =~ /\A\/\w+\z/
+      ["views"]
+    elsif path =~ /\A\/\w+\/views\z/
+      doc = DB.get("_design/#{path.split("/")[1]}") rescue nil
+      return [] unless doc
+      doc["views"].keys.sort
+    elsif path =~ /\A\/\w+\/views\/\w+\z/
+      ["map.js", "reduce.js"]
+    end
+  end
+
+  def file?(path)
+    path[-3..-1] == '.js'
+  end
+
+  def directory?(path)
+    !file?(path)
+  end
+
+  def read_file(path)
+    return unless file?(path)
+    parts = path.split("/")
+    model, view, function = parts[1], parts[-2], parts.last
+    doc = DB.get("_design/#{model}") rescue nil
+    return "Error reading document.\n" unless doc
+    res = doc["views"][view][function[0..-4]]
+    res ? res + "\n" : ""
+  end
+end
+
+
+couchdir = CouchDir.new
+FuseFS.set_root(couchdir)
+FuseFS.mount_under MOUNT_DIR
+
+trap("INT") do
+  puts "ancelling..."
+  FuseFS.unmount
+  sleep 0.25
+  FuseFS.exit
+  puts "Bye."
+end
+
+puts "Quilt is running on #{MOUNT_DIR}"
+FuseFS.run
