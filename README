@@ -1,4 +1,15 @@
 Quilt
+=====
 
 Thin patterns facing CoucDB.
 
+
+Getting started
+---------------
+
+inside this directory run
+
+script/fs
+
+Your Application code will be at
+./app
