@@ -5,57 +5,136 @@ require 'rubygems'
 require 'couchrest'
 require 'json'
 
-
 MOUNT_DIR = File.expand_path(File.join(File.dirname(__FILE__), '../app'))
-Dir.mkdir(MOUNT_DIR) unless File.directory?(MOUNT_DIR)
-
 DB = CouchRest.database("http://127.0.0.1:5984/nashi-01-development")
 
-class CouchDir < FuseFS::FuseDir
-  # / ModelName / views / ViewName / FunctionName
+# Quilt mixes CouchDB Design Documents into the filesystem provided by FuseFS::MetaDir.
+#
+# Directory Structure:
+# /
+#   ApplictionName
+#     _rev
+#     views
+#       view_name
+#         map.js
+#         reduce.js
+class Quilt < FuseFS::FuseDir
   def contents(path)
-    if path == "/"
-      r = DB.documents :startkey => "_design/", :endkey => "_design/_", :include_docs => true
-      r["rows"].map { |e| e["id"].sub(/\A_design\//, '') }.flatten.sort
-    elsif path =~ /\A\/\w+\z/
-      ["views"]
-    elsif path =~ /\A\/\w+\/views\z/
-      doc = DB.get("_design/#{path.split("/")[1]}") rescue nil
-      return [] unless doc
-      doc["views"].keys.sort
-    elsif path =~ /\A\/\w+\/views\/\w+\z/
+    base, *rest = scan_path(path)
+    if base.nil?
+      list_design_documents
+    elsif rest.empty?
+      ["views", "_rev"]
+    elsif rest == ["views"]
+      list_views(base)
+    elsif rest.size == 2 && rest.first == "views"
       ["map.js", "reduce.js"]
+    else
+      []
     end
   end
 
   def file?(path)
-    path[-3..-1] == '.js'
+    base, *rest = scan_path(path)
+    # /Site/_rev
+    # /Site/views/by_name/map.js
+    # /Site/views/by_name/reduce.js
+    rest == ["_rev"] ||
+      rest.size == 3 && rest[0] == "views" && ["map.js", "reduce.js"].include?(rest.last)
   end
 
   def directory?(path)
-    !file?(path)
+    base, *rest = scan_path(path)
+    # /Site
+    # /Site/views
+    # /Site/views/by_name
+    rest.empty? || rest == ["views"] || (rest.size == 2 && rest.first == "views")
+  end
+
+  def executable?(path)
+    return false if file?(path)
   end
 
   def read_file(path)
     return unless file?(path)
-    parts = path.split("/")
-    model, view, function = parts[1], parts[-2], parts.last
-    doc = DB.get("_design/#{model}") rescue nil
-    return "Error reading document.\n" unless doc
-    res = doc["views"][view][function[0..-4]]
-    res ? res + "\n" : ""
+    parts = scan_path(path)
+    read_content_for parts
+  end
+
+  private
+
+  def list_design_documents
+    docs = DB.documents :startkey => "_design/", :endkey => "_design/_", :include_docs => true
+    docs.is_a?(Hash) ? docs["rows"].map { |doc| design_document_name(doc["id"]) }.sort : []
+  end
+
+  def list_views(name)
+    doc = get_design_document(name)
+    doc["views"].keys.sort
+  end
+
+  def read_content_for(parts)
+    name = parts.shift
+    result = get_design_document(name)
+    parts.each do |part|
+      p = part.sub(/\.js\z/, "")
+      result = result[p]
+    end
+    result
+  end
+
+  def get_design_document(name)
+    DB.get "_design/#{name}"
+  end
+
+  def design_document_name(id)
+    id.split("/").last
+  end
+end
+
+class CouchDir < FuseFS::MetaDir
+  def initialize(*args)
+    @quilt = Quilt.new
+    super
+  end
+
+  def file?(path)
+    @quilt.file?(path) || super
+  end
+
+  def directory?(path)
+    @quilt.directory?(path) || super
+  end
+
+  def executable?(path)
+    @quilt.executable?(path).nil? ? super : false
+  end
+
+  def contents(path)
+    @quilt.contents(path) + (super || [])
+  end
+
+  def read_file(path)
+    @quilt.read_file(path) || super
   end
 end
 
 
+# main Quilt starts here
+
+# create mount dir unless exists
+Dir.mkdir(MOUNT_DIR) unless File.directory?(MOUNT_DIR)
+
+# init couch dir
 couchdir = CouchDir.new
+
 FuseFS.set_root(couchdir)
 FuseFS.mount_under MOUNT_DIR
 
 trap("INT") do
   puts "ancelling..."
   FuseFS.unmount
-  sleep 0.25
+  sleep 0.1
   FuseFS.exit
   puts "Bye."
 end
