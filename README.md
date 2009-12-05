@@ -6,7 +6,7 @@ Thin patterns facing CouchDB.
 ## Introduction
 
 CouchDB is a document based Database System. The documents are stored in JSON format. Documents can have so called attachements, so CouchDB can easyly store files.
-CouchDB holds application code in Design Documents. These documents are normal CouchDB documents, which have the prefix _design/ as id, for example _design/Site.
+CouchDB holds application code in Design Documents. These documents are normal CouchDB documents, which have the prefix __design/_ as id, for example __design/Site_.
 Design documents hold application code, that is views (Map-Reduce functions), show and list transformations.
 Application Assets, as Images and CSS files, are stored inside design documents as attachements, too.
 
@@ -28,41 +28,41 @@ note that the map functions are shorted for simplicity and would not work well.
 
 ### JSON CouchDB document (design document):
 
-  {
-     "_id": "_design/Site",
-     "_rev": "955-e08d9e52c17159fa1c981202ae6bfcbb",
-     "language": "javascript",
-     "views": {
-         "all": {
-             "map": "function(doc) { emit(doc['_id'], 1) }"
-         },
-         "by_domain": {
-             "map": "function(doc) { emit(doc['domain'], 1) }"
-         }
-     }
-  }
+    {
+       "_id": "_design/Site",
+       "_rev": "955-e08d9e52c17159fa1c981202ae6bfcbb",
+       "language": "javascript",
+       "views": {
+           "all": {
+               "map": "function(doc) { emit(doc['_id'], 1) }"
+           },
+           "by_domain": {
+               "map": "function(doc) { emit(doc['domain'], 1) }"
+           }
+       }
+    }
 
 
 ### Corresponding Quilt filesystem mapping:
 
-  app/
-    _design/
-      Site/
-        _id          # _design/Site
-        _rev         # 955-e08d9e52c17159fa1c981202ae6bfcbb
-        language     # javascript
-        views/
-          all/
-            map.js   # function(doc) { emit(doc['_id'], 1) }
-          by_domain/
-            map.js   # function(doc) { emit(doc['domain'], 1) }
+    app/
+      _design/
+        Site/
+          _id          # _design/Site
+          _rev         # 955-e08d9e52c17159fa1c981202ae6bfcbb
+          language     # javascript
+          views/
+            all/
+              map.js   # function(doc) { emit(doc['_id'], 1) }
+            by_domain/
+              map.js   # function(doc) { emit(doc['domain'], 1) }
 
 
 ## Getting started
 
 inside this directory run
 
-  script/fs
+    script/fs
 
 
 Your Application code will now be available at ./app.
