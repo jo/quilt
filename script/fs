@@ -5,8 +5,15 @@ require 'rubygems'
 require 'couchrest'
 require 'json'
 
+# specify the database name here
+DB_NAME = "nashi-01-development"
+
+# couch fs will be mounted here
 MOUNT_DIR = File.expand_path(File.join(File.dirname(__FILE__), '../app'))
-DB = CouchRest.database("http://127.0.0.1:5984/nashi-01-development")
+
+# initialize couchrest database mapper
+DB = CouchRest.database("http://127.0.0.1:5984/#{DB_NAME}")
+
 
 # Quilt mixes CouchDB Design Documents into the filesystem provided by FuseFS::MetaDir.
 #

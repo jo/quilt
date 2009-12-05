@@ -4,6 +4,29 @@ Quilt
 Thin patterns facing CouchDB.
 
 
+Important Note
+--------------
+
+This document describes how Quild **should** work, not what it currently does.
+Quilt currently only maps design documents to the app root, and no write operations are supported.
+
+That is why I need your help. If you share my euphoria on this approach feel free to fork my Quilt and start experimenting with Rubys FuseFS API and CouchDB.
+
+
+Some resources you might consider as a starting point:
+
+* Ruby FuseFS: http://rubyforge.org/projects/fusefs/
+* CouchDB: http://couchdb.apache.org/
+* CouchDB: The Definitive Guide: http://books.couchdb.org/relax/
+
+
+
+Installation
+------------
+
+See INSTALL file.
+
+
 
 Introduction
 ------------
@@ -67,7 +90,9 @@ note that the map functions are shorted for simplicity and would not work well.
 Getting started
 ---------------
 
-inside this directory run
+Change *DB_NAME* in *script/fs* to fullfit your database name.
+
+inside the base directory run
 
     script/fs
 
