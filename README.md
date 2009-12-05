@@ -7,10 +7,7 @@ Thin patterns facing CouchDB.
 Important Note
 --------------
 
-This document describes how Quilt **should** work, not what it currently does.
-Quilt currently only maps design documents to the app root, and no write operations are supported.
-
-That is why I need your help. If you share my euphoria on this approach feel free to fork my Quilt and start experimenting with Rubys FuseFS API and CouchDB.
+If you share my euphoria on this approach feel free to fork my Quilt and start experimenting with Rubys FuseFS API and CouchDB.
 
 
 Some resources you might consider as a starting point:

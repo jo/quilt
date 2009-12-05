@@ -12,51 +12,11 @@ MOUNT_DIR = File.expand_path(File.join(File.dirname(__FILE__), '../app'))
 # initialize couchrest database mapper
 DB = "http://127.0.0.1:5984/#{DB_NAME}"
 
-
-
-class CouchDir < FuseFS::MetaDir
-  def initialize(*args)
-    @quilt = Quilt.new(DB)
-    super
-  end
-
-  def file?(path)
-    @quilt.file?(path) || super
-  end
-
-  def directory?(path)
-    @quilt.directory?(path) || super
-  end
-
-  def executable?(path)
-    @quilt.executable?(path).nil? ? super : false
-  end
-
-  def contents(path)
-    @quilt.contents(path) + (super || [])
-  end
-
-  def read_file(path)
-    @quilt.read_file(path) || super
-  end
-
-  def can_write?(path)
-    true
-  end
-
-  def write_to(path, str)
-    @quilt.write_to(path, str) || super
-  end
-end
-
-
-# main Quilt starts here
-
 # create mount dir unless exists
 Dir.mkdir(MOUNT_DIR) unless File.directory?(MOUNT_DIR)
 
 # init couch dir
-couchdir = CouchDir.new
+couchdir = Quilt.new(DB)
 
 FuseFS.set_root(couchdir)
 FuseFS.mount_under MOUNT_DIR
