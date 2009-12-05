@@ -61,6 +61,13 @@ class Quilt < FuseFS::FuseDir
     read_content_for parts
   end
 
+  def write_to(path, str)
+    return unless file?(path)
+    parts = scan_path(path)
+    write_content_to parts, str
+    true
+  end
+
   private
 
   def list_design_documents
@@ -81,6 +88,11 @@ class Quilt < FuseFS::FuseDir
       result = result[p]
     end
     result
+  end
+
+  def write_content_to(parts, str)
+    puts parts.inspect
+    puts str
   end
 
   def get_design_document(name)
@@ -116,6 +128,14 @@ class CouchDir < FuseFS::MetaDir
 
   def read_file(path)
     @quilt.read_file(path) || super
+  end
+
+  def can_write?(path)
+    true
+  end
+
+  def write_to(path, str)
+    @quilt.write_to(path, str) || super
   end
 end
 
