@@ -4,28 +4,40 @@ Quilt
 Thin patterns facing CouchDB.
 
 
-Important Note
---------------
+Getting involved
+----------------
 
 If you share my euphoria on this approach feel free to fork my Quilt and start experimenting with Rubys FuseFS API and CouchDB.
 
 
 Some resources you might consider as a starting point:
 
-* [Ruby FuseFS RubyForge Project Page](http://rubyforge.org/projects/fusefs/)
 * [CouchDB Project Page](http://couchdb.apache.org/)
+* [Ruby FuseFS RubyForge Project Page](http://rubyforge.org/projects/fusefs/)
 * [CouchDB: The Definitive Guide](http://books.couchdb.org/relax/)
-* [JSON Primer](http://books.couchdb.org/relax/appendix/json-primer)
 
 
-### Questions
-
-* How to deal with temporary editor files, like .swp etc? Ruby FuseFS provides some functionality for this but I had problems saving documents with Vim as well as with Gedit. (Contact me for details)
 
 Installation
 ------------
 
-See INSTALL file.
+Quilt is written in Ruby using the FuseFS Ruby Library.
+To install Quilt you first need to install the following software:
+
+    apt-get install ruby rubygems libfusefs-ruby
+    apt-get install couchdb
+    gem install couchrest
+
+I hope I have not forgotten any dependency. Feel free to contact me (schmidt@netzmerk.com) if you run into any troubles.
+
+
+Install Quilt
+-------------
+
+Installation of quilt is simple as cloning the project source tree from GitHub:
+
+    git clone git://github.com/jo/quilt.git
+
 
 
 
