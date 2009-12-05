@@ -6,7 +6,7 @@ Thin patterns facing CouchDB.
 ## Introduction
 
 CouchDB is a document based Database System. The documents are stored in JSON format. Documents can have so called attachements, so CouchDB can easyly store files.
-CouchDB holds application code in Design Documents. These documents are normal CouchDB documents, which have the prefix __design/_ as id, for example __design/Site_.
+CouchDB holds application code in Design Documents. These documents are normal CouchDB documents, which have the prefix ___design/_ as id, for example ___design/Site_.
 Design documents hold application code, that is views (Map-Reduce functions), show and list transformations.
 Application Assets, as Images and CSS files, are stored inside design documents as attachements, too.
 
