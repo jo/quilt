@@ -18,18 +18,6 @@ Some resources you might consider as a starting point:
 
 
 
-Next Steps
-----------
-
-The next steps in Quilt development are
-
-* change document root _app/_ to list all databases instead of just one configurable database
-* view results under _view/_ subfolder on design documents
-* list and show results under corresponding subfolders on design documents
-* attachements
-
-
-
 Installation
 ------------
 
