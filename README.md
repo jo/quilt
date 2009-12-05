@@ -18,8 +18,13 @@ Some resources you might consider as a starting point:
 * [Ruby FuseFS RubyForge Project Page](http://rubyforge.org/projects/fusefs/)
 * [CouchDB Project Page](http://couchdb.apache.org/)
 * [CouchDB: The Definitive Guide](http://books.couchdb.org/relax/)
+* [JSON Primer](http://books.couchdb.org/relax/appendix/json-primer)
 
 
+### Questions
+
+* How could we mark numbers? How could we know that a files contents is a number and we therefore have to onvert the string?
+* How to deal with temporary editor files, like .swp etc? Ruby FuseFS provides some functionality for this but I had problems saving documents with Vim as well as with Gedit. (Contact me for details)
 
 Installation
 ------------
