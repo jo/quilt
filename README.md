@@ -23,7 +23,6 @@ Some resources you might consider as a starting point:
 
 ### Questions
 
-* How could we mark numbers? How could we know that a files contents is a number and we therefore have to onvert the string?
 * How to deal with temporary editor files, like .swp etc? Ruby FuseFS provides some functionality for this but I had problems saving documents with Vim as well as with Gedit. (Contact me for details)
 
 Installation
@@ -49,8 +48,10 @@ The CouchDB documents are mapped to a directory structure in the following way:
 * each Document is a directory named after the id of the document. Design documents are stored in a subfolder called _design.
 * each key in the hash of the document is a directory inside the documents folder
 * the value of the hash lives inside the key folder
-* strings and numbers in the document are plain files with the string / number as content
-* arrays are a bit more complicated: to keep the sort order of the array each value gets a number as prefix, eg "01-tag1"
+* strings are plain files with the extension .js
+* floats are plain files with the extension .f
+* integers are plain files with the extension .i
+* arrays are directories where the elements are *all* numbered, like 000, 001 and 002.js
 
 
 
@@ -81,9 +82,9 @@ note that the map functions are shorted for simplicity and would not work well.
     app/
       _design/
         Site/
-          _id          # _design/Site
-          _rev         # 955-e08d9e52c17159fa1c981202ae6bfcbb
-          language     # javascript
+          _id.js       # _design/Site
+          _rev.js      # 955-e08d9e52c17159fa1c981202ae6bfcbb
+          language.js  # javascript
           views/
             all/
               map.js   # function(doc) { emit(doc['_id'], 1) }
