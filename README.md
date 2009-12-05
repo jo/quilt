@@ -15,9 +15,9 @@ That is why I need your help. If you share my euphoria on this approach feel fre
 
 Some resources you might consider as a starting point:
 
-* Ruby FuseFS: http://rubyforge.org/projects/fusefs/
-* CouchDB: http://couchdb.apache.org/
-* CouchDB: The Definitive Guide: http://books.couchdb.org/relax/
+* [Ruby FuseFS RubyForge Project Page](http://rubyforge.org/projects/fusefs/)
+* [CouchDB Project Page](http://couchdb.apache.org/)
+* [CouchDB: The Definitive Guide](http://books.couchdb.org/relax/)
 
 
 
