@@ -1,12 +1,15 @@
-# Quilt
+Quilt
+=====
 
 Thin patterns facing CouchDB.
 
 
-## Introduction
+
+Introduction
+------------
 
 CouchDB is a document based Database System. The documents are stored in JSON format. Documents can have so called attachements, so CouchDB can easyly store files.
-CouchDB holds application code in Design Documents. These documents are normal CouchDB documents, which have the prefix ___design/_ as id, for example ___design/Site_.
+CouchDB holds application code in Design Documents. These documents are normal CouchDB documents, which have the prefix *\_design/* as id, for example *\_design/Site*.
 Design documents hold application code, that is views (Map-Reduce functions), show and list transformations.
 Application Assets, as Images and CSS files, are stored inside design documents as attachements, too.
 
@@ -22,7 +25,9 @@ The CouchDB documents are mapped to a directory structure in the following way:
 * arrays are a bit more complicated: to keep the sort order of the array each value gets a number as prefix, eg "01-tag1"
 
 
-## Example JSON Mapping
+
+Example JSON Mapping
+--------------------
 
 note that the map functions are shorted for simplicity and would not work well.
 
@@ -58,7 +63,9 @@ note that the map functions are shorted for simplicity and would not work well.
               map.js   # function(doc) { emit(doc['domain'], 1) }
 
 
-## Getting started
+
+Getting started
+---------------
 
 inside this directory run
 
