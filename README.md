@@ -2,6 +2,7 @@ Quilt
 =====
 
 Thin patterns facing CouchDB.
+Read and write CouchDB documents via FUSE userspace filesystem
 
 
 Getting involved
@@ -50,7 +51,7 @@ Design documents hold application code, that is views (Map-Reduce functions), sh
 Application Assets, as Images and CSS files, are stored inside design documents as attachements, too.
 
 Quilt maps CouchDB documents to a filesystem, provided by FuseFS.
-Quilt is currently using Ruby to create a Fuse Filesystem. The Filesystem is mounted to the app/ directory.
+Quilt is currently using Ruby to create a Fuse Filesystem. The Filesystem is mounted to the couchdb/ directory.
 
 The CouchDB documents are mapped to a directory structure in the following way:
 
@@ -88,7 +89,7 @@ note that the map functions are shorted for simplicity and would not work well.
 
 ### Corresponding Quilt filesystem mapping:
 
-    app/
+    couchdb/
       _design/
         Site/
           _id.js       # _design/Site
@@ -112,6 +113,6 @@ inside the base directory run
     script/fs
 
 
-Your Application code will now be available at ./app.
+Your Application code will now be available at ./couchdb.
 
 

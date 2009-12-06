@@ -14,16 +14,18 @@ require 'rubygems'
 require 'couchrest'
 
 class Quilt < FuseFS::FuseDir
-  def initialize(db)
-    @db = CouchRest.database(db)
+  def initialize(db_server)
+    @db_server = db_server
   end
 
   def contents(path)
     base, *rest = scan_path(path)
     if base.nil?
-      list_documents
-    elsif base == "_design" && rest.empty?
-      list_design_documents
+      list_databases
+    elsif rest.empty?
+      list_documents(base)
+    elsif rest == ["_design"]
+      list_design_documents(base)
     else
       list_document_content(path)
     end
@@ -35,9 +37,15 @@ class Quilt < FuseFS::FuseDir
 
 
   def directory?(path)
-    return true if path == "/_design"
-    res = read_document(path)
-    res.is_a?(Hash) || res.is_a?(Array)
+    base, *parts = scan_path(path)
+    return true if parts == ["_design"]
+    if parts.empty?
+      res = read_database(base)
+      res.is_a?(Hash) || res.is_a?(Array)
+    else
+      res = read_document(path)
+      res.is_a?(Hash) || res.is_a?(Array)
+    end
   end
 
   def read_file(path)
@@ -49,10 +57,10 @@ class Quilt < FuseFS::FuseDir
   end
 
   def write_to(path, str)
-    id, *parts = id_and_parts_from(path)
-    doc = @db.get(id)
+    db_name, id, *parts = id_and_parts_from(path)
+    doc = db(db_name).get(id)
     update_value(doc, parts, str)
-    @db.save_doc doc
+    db(db_name).save_doc doc
   end
 
   def can_delete?(path)
@@ -61,6 +69,10 @@ class Quilt < FuseFS::FuseDir
   end
 
   private
+
+  def db(name)
+    CouchRest.database(File.join(@db_server, name))
+  end
 
   def update_value(hash, keys, value)
     key = id_for(keys.shift)
@@ -72,16 +84,22 @@ class Quilt < FuseFS::FuseDir
     hash
   end
 
-  def list_documents
-    ["_design"] + @db.documents["rows"].map { |doc| doc["id"] }.select { |e| e !~ /\A_design\// }
+  def list_databases
+    CouchRest.get File.join(@db_server, "_all_dbs")
+  rescue => e
+    puts e.message
   end
 
-  def list_design_documents
-    @db.documents(:startkey => "_design/", :endkey => "_design/_")["rows"].map { |doc| doc["id"].sub(/\A_design\//, "") }
+  def list_documents(database)
+    ["_design"] + db(database).documents["rows"].map { |doc| doc["id"] }.select { |e| e !~ /\A_design\// }
   end
 
-  def get_document(id, parts = [])
-    doc = @db.get(id)
+  def list_design_documents(database)
+    db(database).documents(:startkey => "_design/", :endkey => "_design/_")["rows"].map { |doc| doc["id"].sub(/\A_design\//, "") }
+  end
+
+  def get_document(database, id, parts = [])
+    doc = db(database).get(id)
     parts.each do |part|
       doc = doc[id_for(part)]
     end
@@ -89,8 +107,8 @@ class Quilt < FuseFS::FuseDir
   end
 
   def list_document_content(path)
-    id, *parts = id_and_parts_from(path)
-    doc = get_document(id, parts)
+    database, id, *parts = id_and_parts_from(path)
+    doc = get_document(database, id, parts)
     if doc.is_a?(Hash)
       doc.keys.sort.map { |k| filename_for(k, doc[k]) }
     elsif doc.is_a?(Array)
@@ -100,9 +118,13 @@ class Quilt < FuseFS::FuseDir
     end
   end
 
+  def read_database(name)
+    CouchRest.get File.join(@db_server, name)
+  end
+
   def read_document(path)
-    id, *parts = id_and_parts_from(path)
-    get_document(id, parts)
+    database, id, *parts = id_and_parts_from(path)
+    get_document(database, id, parts)
   end
 
   def id_for(filename)
@@ -122,11 +144,11 @@ class Quilt < FuseFS::FuseDir
   end
 
   def id_and_parts_from(path)
-    name, *parts = scan_path(path)
+    database, name, *parts = scan_path(path)
     if name == "_design"
       raise "Design document name incomplete" if parts.empty?
       name << "/#{parts.shift}"
     end
-    [name] + parts
+    [database] + [name] + parts
   end
 end
