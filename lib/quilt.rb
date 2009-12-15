@@ -1,79 +1,104 @@
-# Quilt mixes CouchDB Design Documents into the filesystem provided by FuseFS::MetaDir.
-#
-# Directory Structure:
-# /
-#   ApplictionName
-#     _rev.js
-#     _id.js
-#     views
-#       view_name
-#         map.js
-#         reduce.js
+# Quilt mixes CouchDB Design Documents into FUSE
 
-require 'rubygems'
-require 'couchrest'
+require 'fusefs'
+require 'lib/quilt_db'
 
 class Quilt < FuseFS::FuseDir
-  def initialize(db_server)
-    @db_server = db_server
+  attr_reader :db
+
+  # initializes Quilt with the database server name
+  def initialize(db_server = "http://127.0.0.1:5984")
+    @db = QuiltDB.new(db_server)
   end
 
+  # list contents of path
   def contents(path)
-    base, *rest = scan_path(path)
-    if base.nil?
-      list_databases
-    elsif rest.empty?
-      list_documents(base)
-    elsif rest == ["_design"]
-      list_design_documents(base)
+    database, id, *rest = scan_path(path)
+    if database.nil?
+      # we are on quilts docroot
+      db.databases
+    elsif id.nil?
+      # we are at the root of a database
+      db.documents(database)
+    elsif id == "_design" && rest.empty?
+      # we requested a list of all design documents of a database
+      db.design_documents(database)
     else
+      # we are inside a document and list the json mapping content
       list_document_content(path)
     end
   end
 
+  # is path a directory?
+  def directory?(path)
+    database, id, *parts = scan_path(path)
+    # root is a directory
+    return true if database.nil?
+    # databases are mapped to directories
+    return db.database?(database) if id.nil?
+    if id == "_design"
+      # _design is a directory
+      return true if parts.empty?
+      # look inside the design document
+      id = [id, parts.shift].join("/")
+    end
+    # look into document
+    res = get_document_contents(database, id, parts)
+    # arrays and hashes are mapped into directories
+    res.is_a?(Hash) || res.is_a?(Array)
+  end
+
+  # is path a file?
+  # # every javascript file is a JSON value.
   def file?(path)
     File.extname(path) == ".js"
   end
 
-
-  def directory?(path)
-    base, *parts = scan_path(path)
-    return true if parts == ["_design"]
-    if parts.empty?
-      res = read_database(base)
-      res.is_a?(Hash) || res.is_a?(Array)
-    else
-      res = read_document(path)
-      res.is_a?(Hash) || res.is_a?(Array)
-    end
-  end
-
+  # reading file contents of path
   def read_file(path)
-    read_document(path).to_s
+    return unless file?(path)
+    database, id, *parts = id_and_parts_from(path)
+    # read the document (part) at path
+    get_document_contents(database, id, parts).to_s
   end
 
+  # calculate file size
+  def size(path)
+    return 4096 unless file?(path)
+    str = read_file(path)
+    return 0 unless str
+    str.length
+  end
+
+  # is path writable?
   def can_write?(path)
+    # every file is writable
     file?(path)
   end
 
+  # writes content str to path
   def write_to(path, str)
-    db_name, id, *parts = id_and_parts_from(path)
-    doc = db(db_name).get(id)
+    database, id, *parts = id_and_parts_from(path)
+    # fetch document
+    doc = db.get_document(database, id)
+    # update the value that the file at path holds
     update_value(doc, parts, str)
-    db(db_name).save_doc doc
+    # save document
+    db.save_document(database, doc)
   end
 
+  # can I delete path?
+  # This helps editors, but we don't really use it.
   def can_delete?(path)
-    # This helps editors, but we don't really use it.
     true
   end
 
   private
 
-  def db(name)
-    CouchRest.database(File.join(@db_server, name))
-  end
-
+  # updates a part of a json document.
+  # Note that files are just parts of documents.
+  # Example:
+  #  update_value({:a => { :b => 'c'}}, [:a, :b], 'cis') #=> {:a => { :b => 'cis'}}
   def update_value(hash, keys, value)
     key = id_for(keys.shift)
     if keys.empty?
@@ -84,69 +109,55 @@ class Quilt < FuseFS::FuseDir
     hash
   end
 
-  def list_databases
-    CouchRest.get File.join(@db_server, "_all_dbs")
-  rescue => e
-    puts e.message
-  end
-
-  def list_documents(database)
-    ["_design"] + db(database).documents["rows"].map { |doc| doc["id"] }.select { |e| e !~ /\A_design\// }
-  end
-
-  def list_design_documents(database)
-    db(database).documents(:startkey => "_design/", :endkey => "_design/_")["rows"].map { |doc| doc["id"].sub(/\A_design\//, "") }
-  end
-
-  def get_document(database, id, parts = [])
-    doc = db(database).get(id)
+  # get document id from database,
+  # or a part of the document.
+  def get_document_contents(database, id, parts = [])
+    doc = db.get_document(database, id)
     parts.each do |part|
       doc = doc[id_for(part)]
     end
     doc
   end
 
+  # list the documents contents as mapped into directory at path
   def list_document_content(path)
     database, id, *parts = id_and_parts_from(path)
-    doc = get_document(database, id, parts)
+    # get the document
+    doc = get_document_contents(database, id, parts)
     if doc.is_a?(Hash)
+      # Hash is mapped into directory
       doc.keys.sort.map { |k| filename_for(k, doc[k]) }
     elsif doc.is_a?(Array)
-      doc.map { |k| filename_for(k, doc[k]) }
+      # Array is mapped into directory
+      doc.map { |k| filename_for(doc.index(k), k) }
     else
       []
     end
   end
 
-  def read_database(name)
-    CouchRest.get File.join(@db_server, name)
-  end
-
-  def read_document(path)
-    database, id, *parts = id_and_parts_from(path)
-    get_document(database, id, parts)
-  end
-
+  # build the id from filename
   def id_for(filename)
     filename.sub(/(\.(f|i))?\.js\z/, "")
   end
 
+  # Builds a filename from key and value.
+  # Note: values are casted by extension.
   def filename_for(key, value)
-    name = key.dup
+    basename = key.is_a?(Integer) ? "%.3d" % key : key
+
     if value.is_a?(Float)
-      name << ".f.js"
+      "#{basename}.f.js"
     elsif value.is_a?(Integer)
-      name << ".i.js"
+      "#{basename}.i.js"
     elsif value.is_a?(String)
-      name << ".js"
+      "#{basename}.js"
     end
-    name
   end
 
+  # gets the database, id and parts from path
   def id_and_parts_from(path)
     database, name, *parts = scan_path(path)
     if name == "_design"
-      raise "Design document name incomplete" if parts.empty?
       name << "/#{parts.shift}"
     end
     [database] + [name] + parts
