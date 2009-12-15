@@ -6,6 +6,7 @@ require File.join(File.dirname(__FILE__), "../lib/quilt")
 DB = "http://127.0.0.1:5984"
 
 # couch fs will be mounted here
+# eg: app/127.0.0.1:5984
 MOUNT_DIR = File.expand_path(File.join(File.dirname(__FILE__), '..', 'app', File.basename(DB)))
 
 # create mount dir unless exists
@@ -20,7 +21,6 @@ FuseFS.mount_under MOUNT_DIR
 trap("INT") do
   puts "ancelling..."
   FuseFS.unmount
-  sleep 0.1
   FuseFS.exit
   puts "Bye."
 end
