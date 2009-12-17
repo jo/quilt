@@ -12,6 +12,9 @@ class Quilt < FuseFS::FuseDir
   end
 
   # list contents of path
+  # TODO:
+  # /database/_design/document/show
+  # /database/_design/document/list
   def contents(path)
     database, id, *rest = scan_path(path)
     if database.nil?
@@ -151,6 +154,8 @@ class Quilt < FuseFS::FuseDir
       "#{basename}.i.js"
     elsif value.is_a?(String)
       "#{basename}.js"
+    else
+      basename
     end
   end
 

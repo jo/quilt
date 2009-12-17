@@ -29,7 +29,7 @@ class QuiltDB
 
   def document?(database, id)
     # TODO: should just be a HEAD request
-    false
+    get_document(database, id).is_a?(Hash)
   end
 
   def get_document(database, id)
