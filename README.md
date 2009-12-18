@@ -59,8 +59,8 @@ The CouchDB documents are mapped to a directory structure in the following way:
 * each key in the hash of the document is a directory inside the documents folder
 * the value of the hash lives inside the key folder
 * strings are plain files with the extension .js
-* floats are plain files with the extension .f
-* integers are plain files with the extension .i
+* floats are plain files with the extension .f.js
+* integers are plain files with the extension .i.js
 * arrays are directories where the elements are *all* numbered, like 000, 001 and 002.js
 
 
@@ -106,13 +106,13 @@ note that the map functions are shorted for simplicity and would not work well.
 Getting started
 ---------------
 
-Change *DB_NAME* in *script/fs* to fullfit your database name.
+Change *DB* in *script/fs* to fullfit your CouchDB server url.
 
 inside the base directory run
 
     script/fs
 
 
-Your Application code will now be available at ./couchdb.
+Your Application code will now be available at ./app/<CouchDB server url>.
 
 
