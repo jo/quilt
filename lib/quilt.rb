@@ -18,31 +18,35 @@ class Quilt < FuseFS::FuseDir
     database, id, *rest = extract_parts(path)
 
     if database.nil?
-      # we are on quilts docroot
+      # /
       db.databases
     elsif id.nil?
-      # we are at the root of a database
+      # /database_id
       ["_design"] + db.documents(database)
     elsif id == "_design" && rest.empty?
-      # we requested a list of all design documents of a database
+      # /database_id/_design
       db.design_documents(database)
     elsif id =~ /_design\// && rest == ["_show"]
-      doc = get_document_contents(database, id, ["shows"])
+      # /database_id/_design/design_document_id/_show
+      doc = get_document_part(database, id, ["shows"])
       doc.keys.sort
     elsif id =~ /_design\// && rest == ["_list"]
-      # list all list functions
-      doc = get_document_contents(database, id, ["lists"])
+      # /database_id/_design/design_document_id/_list
+      doc = get_document_part(database, id, ["lists"])
       doc.keys.sort
     elsif id =~ /_design\// && rest.size == 2 && rest.first == "_list"
-      # list all view functions
-      doc = get_document_contents(database, id, ["views"])
-      doc.keys.sort.map { |name| append_extname(name, "") }
+      # /database_id/_design/design_document_id/_list/view_function_name
+      doc = get_document_part(database, id, ["views"])
+      doc.keys.sort.map { |name| "#{name}.html" }
     elsif id =~ /_design\// && rest.size == 2 && rest.first == "_show"
-      # list all documents
-      db.documents(database).map { |name| append_extname(name, "") }
+      # /database_id/_design/design_document_id/_list/show_function_name
+      db.documents(database).map { |name| "#{name}.html" }
     else
-      # get the document
-      doc = get_document_contents(database, id, rest)
+      # /database_id/document_id
+      # /database_id/document_id/object
+      # /database_id/_design/design_document_id
+      # /database_id/_design/design_document_id/object
+      doc = get_document_part(database, id, rest)
 
       arr = if doc.is_a?(Hash)
               # Hash is mapped into directory
@@ -55,10 +59,12 @@ class Quilt < FuseFS::FuseDir
             end
 
       if id =~ /_design\// && rest.empty?
-        # we are inside a design document root
+        # /database_id/_design/design_document_id
+        # add _list and _show directories
         (arr + ["_list", "_show"]).sort
       else
-        # we are inside a document and list the json mapping content
+        # we are inside a document
+        # list the json mapping content
         arr
       end
     end
@@ -70,27 +76,35 @@ class Quilt < FuseFS::FuseDir
   # is path a directory?
   def directory?(path)
     database, id, *parts = extract_parts(path)
+
     # /
     return true if database.nil?
-    # /database 
+    # /database_id
     return db.database?(database) if id.nil?
-    # /database/_design
+    # /database_id/_design
     return true if id == "_design" && parts.empty?
-    # show and list functions are mapped to directories,
-    # as well as their names
-    return true if id =~ /\A_design/ && parts.size <= 2 && ["_list", "_show"].include?(parts.first)
+    # /database_id/_design/design_document_id/_list
+    return true if id =~ /\A_design/ && parts == ["_list"]
+    # /database_id/_design/design_document_id/_list/list_function_name
+    return true if id =~ /\A_design/ && parts.size == 2 && parts.first == "_list"
+    # /database_id/_design/design_document_id/_show
+    return true if id =~ /\A_design/ && parts == ["_show"]
+    # /database_id/_design/design_document_id/_show/show_function_name
+    return true if id =~ /\A_design/ && parts.size == 2 && parts.first == "_show"
+    # all other
     # look into document
-    res = get_document_contents(database, id, parts)
+    res = get_document_part(database, id, parts)
     # arrays and hashes are mapped into directories
     res.is_a?(Hash) || res.is_a?(Array)
+
   rescue => e
     puts e.message, e.backtrace
   end
 
   # is path a file?
-  # # every javascript file is a JSON value.
+  # Every javascript or HTML is file, based on extension
   def file?(path)
-    File.extname(path) == ".js"
+    [".js", ".html"].include?(File.extname(path))
   end
 
   # reading file contents of path
@@ -111,7 +125,7 @@ class Quilt < FuseFS::FuseDir
       file.read if file
     else
       # read the document (part) at path
-      get_document_contents(database, id, parts).to_s
+      get_document_part(database, id, parts).to_s
     end
   rescue => e
     puts e.message, e.backtrace
@@ -126,10 +140,9 @@ class Quilt < FuseFS::FuseDir
   end
 
   # is path writable?
+  # every javascript file is writable
   def can_write?(path)
-    return if File.basename(path) =~ /^_/
-    # every file is writable
-    file?(path)
+    File.extname(path) == ".js"
   end
 
   # writes content str to path
@@ -153,30 +166,23 @@ class Quilt < FuseFS::FuseDir
 
   private
 
-  # get document id from database,
+  # gets the database, id and parts from path
+  def extract_parts(path)
+    database, id, *parts = scan_path(path)
+    if id == "_design" && !parts.empty?
+      id << "/#{parts.shift}"
+    end
+    [database, id] + parts
+  end
+
+  # get document 'id' from 'database',
   # or a part of the document.
-  def get_document_contents(database, id, parts = [])
+  def get_document_part(database, id, parts = [])
     doc = db.get_document(database, id)
     parts.each do |part|
       doc = doc ? doc[remove_extname(part)] : nil
     end
     doc
-  end
-
-  # list the documents contents as mapped into directory at path
-  def list_document_content(path)
-    database, id, *parts = extract_parts(path)
-    # get the document
-    doc = get_document_contents(database, id, parts)
-    if doc.is_a?(Hash)
-      # Hash is mapped into directory
-      doc.keys.sort.map { |k| append_extname(k, doc[k]) }
-    elsif doc.is_a?(Array)
-      # Array is mapped into directory
-      doc.map { |k| append_extname(doc.index(k), k) }
-    else
-      []
-    end
   end
 
   # updates a part of a hash
@@ -194,7 +200,7 @@ class Quilt < FuseFS::FuseDir
 
   # remove extname to get the id
   def remove_extname(filename)
-    filename.sub(/(\.(f|i))?\.js\z/, "")
+    filename.sub(/((\.(f|i))?\.js|\.html)\z/, "")
   end
 
   # Appends extname, that is: builds a filename from key and value.
@@ -211,14 +217,5 @@ class Quilt < FuseFS::FuseDir
     else
       basename
     end
-  end
-
-  # gets the database, id and parts from path
-  def extract_parts(path)
-    database, id, *parts = scan_path(path)
-    if id == "_design" && !parts.empty?
-      id << "/#{parts.shift}"
-    end
-    [database, id] + parts
   end
 end

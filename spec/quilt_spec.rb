@@ -9,7 +9,7 @@ describe "Quilt" do
     @quilt = Quilt.new 
     @database_id = "quilt-test-db"
     @server_name = @quilt.server_name
-    CouchRest.delete(File.join(@server_name, @database_id))
+    CouchRest.delete(File.join(@server_name, @database_id)) rescue nil
     @db = CouchRest.database!(File.join(@server_name, @database_id))
 
     @document = {
@@ -25,6 +25,7 @@ describe "Quilt" do
     @design_document = {
       "_id" => "_design/design_document_id",
       "language" => "javascript",
+      "name" => "This is a name",
       "shows" => {
         "show_function_name" => "function(doc, req) { return 'Hello World!'; }",
       },
@@ -40,242 +41,187 @@ describe "Quilt" do
     @db.save_doc(@design_document)
   end
 
-  describe "list contents of" do
-    describe "/" do
-      # /
-      it "should list databases" do
-        @quilt.contents("/").should include(@database_id)
+  describe "/" do
+    it "contents should list databases" do
+      @quilt.contents("/").should include(@database_id)
+    end
+    it "directory? should return true" do
+      @quilt.directory?("/").should be_true
+    end
+    it "file? should return false" do
+      @quilt.file?("/").should be_false
+    end
+    # /database_id
+    describe "database_id/" do
+      it "contents should list documents" do
+        @quilt.contents("/#{@database_id}").should == ["_design", "document_id"]
       end
-
-      describe "database_id /" do
-        # /database_id
-        it "should list documents" do
-          @quilt.contents("/#{@database_id}").should == ["_design", "document_id"]
+      it "directory? should return true" do
+        @quilt.directory?("/#{@database_id}").should be_true
+      end
+      it "file? should return false" do
+        @quilt.file?("/#{@database_id}").should be_false
+      end
+      # /database_id/document_id
+      describe "document_id/" do
+        it "contents should list documents content" do
+          @quilt.contents("/#{@database_id}/document_id").should == ["_id.js", "_rev.js", "array", "float.f.js", "integer.i.js", "name.js", "object"]
         end
-
-        describe "_design /" do
-          # /database_id/_design
-          it "should list design documents" do
-            @quilt.contents("/#{@database_id}/_design").should == ["design_document_id"]
+        it "directory? should return true" do
+          @quilt.directory?("/#{@database_id}/document_id").should be_true
+        end
+        it "file? should return false" do
+          @quilt.file?("/#{@database_id}/document_id").should be_false
+        end
+        # /database_id/document_id/name.js
+        describe "name.js" do
+          it "directory? should return false" do
+            @quilt.directory?("/#{@database_id}/document_id/name.js").should be_false
           end
-
-          describe "design_document_id /" do
-            # /database_id/_design/design_document_id
-            it "should list design documents content" do
-              @quilt.contents("/#{@database_id}/_design/design_document_id").should == ["_id.js", "_list", "_rev.js", "_show", "language.js", "lists", "shows", "views"]
+          it "file? should return true" do
+            @quilt.file?("/#{@database_id}/document_id/name.js").should be_true
+          end
+          it "read_file should return contents" do
+            @quilt.read_file("/#{@database_id}/document_id/name.js").should == @document["name"]
+          end
+          it "can_write? should return true" do
+            @quilt.can_write?("/#{@database_id}/document_id/name.js").should be_true
+          end
+          it "write_to should update document" do
+            @quilt.write_to("/#{@database_id}/document_id/name.js", "value").should be_true
+          end
+        end
+        # /database_id/document_id/object
+        describe "object/" do
+          it "contents should list object content" do
+            @quilt.contents("/#{@database_id}/document_id/object").should == ["key.js"]
+          end
+          it "directory? should return true" do
+            @quilt.directory?("/#{@database_id}/document_id/object").should be_true
+          end
+          it "file? should return false" do
+            @quilt.file?("/#{@database_id}/document_id/object").should be_false
+          end
+        end
+        # /database_id/document_id/array
+        describe "array/" do
+          it "contents should list array content" do
+            @quilt.contents("/#{@database_id}/document_id/array").should == ["000.js"]
+          end
+          it "directory? should return true" do
+            @quilt.directory?("/#{@database_id}/document_id/array").should be_true
+          end
+          it "file? should return false" do
+            @quilt.file?("/#{@database_id}/document_id/array").should be_false
+          end
+        end
+      end
+      # /database_id/_design
+      describe "_design/" do
+        it "contents should list design documents" do
+          @quilt.contents("/#{@database_id}/_design").should == ["design_document_id"]
+        end
+        it "directory? should return true" do
+          @quilt.directory?("/#{@database_id}/_design").should be_true
+        end
+        it "file? should return false" do
+          @quilt.file?("/#{@database_id}/_design").should be_false
+        end
+        # /database_id/_design/design_document_id
+        describe "design_document_id/" do
+          it "contents should list design documents content" do
+            @quilt.contents("/#{@database_id}/_design/design_document_id").should == ["_id.js", "_list", "_rev.js", "_show", "language.js", "lists", "name.js", "shows", "views"]
+          end
+          it "directory? should return true" do
+            @quilt.directory?("/#{@database_id}/_design/design_document_id").should be_true
+          end
+          it "file? should return false" do
+            @quilt.file?("/#{@database_id}/_design/design_document_id").should be_false
+          end
+          # /database_id/_design/design_document_id/_id.js
+          describe "name.js" do
+            it "read_file should return value" do
+              @quilt.read_file("/#{@database_id}/_design/design_document_id/name.js").should == @design_document["name"]
             end
-
-            describe "_list /" do
-              # /database_id/_design/design_document_id/_list
-              it "should list list functions" do
-                @quilt.contents("/#{@database_id}/_design/design_document_id/_list").should == ["list_function_name"]
+            it "can_write? should return true" do
+              @quilt.can_write?("/#{@database_id}/_design/design_document_id/name.js").should be_true
+            end
+            it "write_to should update _design/design_document_id" do
+              @quilt.write_to("/#{@database_id}/_design/design_document_id/name.js", "value").should be_true
+            end
+          end
+          # /database_id/_design/design_document_id/_list
+          describe "_list/" do
+            it "contents should list list functions" do
+              @quilt.contents("/#{@database_id}/_design/design_document_id/_list").should == ["list_function_name"]
+            end
+            it "file? should return false" do
+              @quilt.file?("/#{@database_id}/_design/design_document_id/_list").should be_false
+            end
+            # /database_id/_design/design_document_id/_list/list_function_name
+            describe "list_function_name/" do
+              it "contents should list views" do
+                @quilt.contents("/#{@database_id}/_design/design_document_id/_list/list_function_name").should == ["view_function_name.html"]
               end
-
-              describe "list_function_name /" do
-                # /database_id/_design/design_document_id/_list/list_function_name
-                it "should list views" do
-                  @quilt.contents("/#{@database_id}/_design/design_document_id/_list/list_function_name").should == ["view_function_name.js"]
+              it "directory? should return true" do
+                @quilt.directory?("/#{@database_id}/_design/design_document_id/_list/list_function_name").should be_true
+              end
+              it "file? should return false" do
+                @quilt.file?("/#{@database_id}/_design/design_document_id/_list/list_function_name").should be_false
+              end
+              # /database_id/_design/design_document_id/_list/list_function_name/view_function_name.html
+              describe "view_function_name.html" do
+                it "directory? should return false" do
+                  @quilt.directory?("/#{@database_id}/_design/design_document_id/_list/list_function_name/view_function_name.html").should be_false
+                end
+                it "file? should return true" do
+                  @quilt.file?("/#{@database_id}/_design/design_document_id/_list/list_function_name/view_function_name.html").should be_true
+                end
+                it "read_file should return contents" do
+                  @quilt.read_file("/#{@database_id}/_design/design_document_id/_list/list_function_name/view_function_name.html").should == "Hello World!"
+                end
+                it "can_write? should return false" do
+                  @quilt.can_write?("/#{@database_id}/_design/design_document_id/_list/list_function_name/view_function_name.html").should be_false
                 end
               end
             end
-
-            describe "_show /" do
-              # /database_id/_design/design_document_id/_show
-              it "should list show functions" do
-                @quilt.contents("/#{@database_id}/_design/design_document_id/_show").should == ["show_function_name"]
+          end
+          # /database_id/_design/design_document_id/_show
+          describe "_show/" do
+            it "contents should list show functions" do
+              @quilt.contents("/#{@database_id}/_design/design_document_id/_show").should == ["show_function_name"]
+            end
+            it "directory? should return true" do
+              @quilt.directory?("/#{@database_id}/_design/design_document_id/_show").should be_true
+            end
+            it "file? should return false" do
+              @quilt.file?("/#{@database_id}/_design/design_document_id/_show").should be_false
+            end
+            # /database_id/_design/design_document_id/_show/show_function_name
+            describe "show_function_name/" do
+              it "contents should list documents" do
+                @quilt.contents("/#{@database_id}/_design/design_document_id/_show/show_function_name").should == ["document_id.html"]
               end
-
-              describe "show_function_name /" do
-                # /database_id/_design/design_document_id/_show/show_function_name
-                it "should list documents" do
-                  @quilt.contents("/#{@database_id}/_design/design_document_id/_show/show_function_name").should == ["document_id.js"]
+              it "directory? should return true" do
+                @quilt.directory?("/#{@database_id}/_design/design_document_id/_show/show_function_name").should be_true
+              end
+              it "file? should return false" do
+                @quilt.file?("/#{@database_id}/_design/design_document_id/_show/show_function_name").should be_false
+              end
+              # /database_id/_design/design_document_id/_show/show_function_name/document_id.html
+              describe "document_id.html" do
+                it "directory? should return false" do
+                  @quilt.directory?("/#{@database_id}/_design/design_document_id/_show/show_function_name/document_id.html").should be_false
                 end
-              end
-            end
-          end
-        end
-
-        describe "document_id /" do
-          # /database_id/document_id
-          it "should list documents content" do
-            @quilt.contents("/#{@database_id}/document_id").should == ["_id.js", "_rev.js", "array", "float.f.js", "integer.i.js", "name.js", "object"]
-          end
-
-          describe "object /" do
-            # /database_id/document_id/object
-            it "should list object content" do
-              @quilt.contents("/#{@database_id}/document_id/object").should == ["key.js"]
-            end
-          end
-
-          describe "array /" do
-            # /database_id/document_id/array
-            it "should list array content" do
-              @quilt.contents("/#{@database_id}/document_id/array").should == ["000.js"]
-            end
-          end
-        end
-      end
-    end
-  end
-
-  describe "check for directory? of" do
-    describe "/" do
-      # /
-      it "should return true" do
-        @quilt.directory?("/").should be_true
-      end
-
-      describe "database_id /" do
-        # /database_id
-        it "should return true" do
-          @quilt.directory?("/#{@database_id}").should be_true
-        end
-
-        describe "document_id /" do
-          # /database_id/document_id
-          it "should return true" do
-            @quilt.directory?("/#{@database_id}/document_id").should be_true
-          end
-        end
-
-        describe "_design /" do
-          # /database_id/_design
-          it "should return true" do
-            @quilt.directory?("/#{@database_id}/_design").should be_true
-          end
-
-          describe "design_document_id /" do
-            # /database_id/_design/design_document_id
-            it "should return true" do
-              @quilt.directory?("/#{@database_id}/_design/design_document_id").should be_true
-            end
-
-            describe "_list /" do
-              # /database_id/_design/design_document_id/_list
-              it "should return true" do
-                @quilt.directory?("/#{@database_id}/_design/design_document_id/_list").should be_true
-              end
-            end
-
-            describe "_show /" do
-              # /database_id/_design/design_document_id/_show
-              it "should return true" do
-                @quilt.directory?("/#{@database_id}/_design/design_document_id/_show").should be_true
-              end
-            end
-          end
-        end
-      end
-    end
-  end
-
-  describe "check for file? of" do
-    describe "/" do
-      # /
-      it "should return false" do
-        @quilt.file?("/").should be_false
-      end
-
-      describe "database_id /" do
-        # /database_id
-        it "should return false" do
-          @quilt.file?("/#{@database_id}").should be_false
-        end
-
-        describe "document_id /" do
-          # /database_id/document_id
-          it "should return false" do
-            @quilt.file?("/#{@database_id}/document_id").should be_false
-          end
-        end
-
-        describe "_design /" do
-          # /database_id/_design
-          it "should return false" do
-            @quilt.file?("/#{@database_id}/_design").should be_false
-          end
-
-          describe "design_document_id /" do
-            # /database_id/_design/design_document_id
-            it "should return false" do
-              @quilt.file?("/#{@database_id}/_design/design_document_id").should be_false
-            end
-          end
-        end
-      end
-    end
-  end
-
-  describe "read a file at" do
-    describe "/" do
-      # /
-      it "should return nil" do
-        @quilt.read_file("/").should be_nil
-      end
-
-      describe "database_id /" do
-        # /database_id
-        it "should return nil" do
-          @quilt.read_file("/#{@database_id}").should be_nil
-        end
-
-        describe "document_id /" do
-          # /database_id/document_id
-          it "should return nil" do
-            @quilt.read_file("/#{@database_id}/document_id").should be_nil
-          end
-
-          describe "_id.js" do
-            # /database_id/document_id/_id.js
-            it "should return document_id" do
-              @quilt.read_file("/#{@database_id}/document_id/_id.js").should == "document_id"
-            end
-          end
-        end
-
-        describe "_design /" do
-          # /database_id/_design
-          it "should return nil" do
-            @quilt.read_file("/#{@database_id}/_design").should be_nil
-          end
-
-          describe "design_document_id /" do
-            # /database_id/_design/design_document_id
-            it "should return nil" do
-              @quilt.read_file("/#{@database_id}/_design/design_document_id").should be_nil
-            end
-
-            describe "_id.js" do
-              # /database_id/_design/design_document_id/_id.js
-              it "should return _design/design_document_id" do
-                @quilt.read_file("/#{@database_id}/_design/design_document_id/_id.js").should == "_design/design_document_id"
-              end
-            end
-          end
-        end
-      end
-    end
-  end
-
-  describe "write to file at" do
-    describe "/" do
-      describe "database_id /" do
-        describe "document_id /" do
-          describe "key.js" do
-            # /database_id/document_id/key.js
-            it "should update document_id" do
-              @quilt.write_to("/#{@database_id}/document_id/key.js", "value").should be_true
-            end
-          end
-        end
-
-        describe "_design /" do
-          describe "design_document_id /" do
-            describe "_id.js" do
-              # /database_id/_design/design_document_id/key.js
-              it "should update _design/design_document_id" do
-                @quilt.write_to("/#{@database_id}/_design/design_document_id/key.js", "value").should be_true
+                it "file? should return true" do
+                  @quilt.file?("/#{@database_id}/_design/design_document_id/_show/show_function_name/document_id.html").should be_true
+                end
+                it "read_file should return contents" do
+                  @quilt.read_file("/#{@database_id}/_design/design_document_id/_show/show_function_name/document_id.html").should == "Hello World!"
+                end
+                it "can_write? should return false" do
+                  @quilt.can_write?("/#{@database_id}/_design/design_document_id/_show/show_function_name/document_id.html").should be_false
+                end
               end
             end
           end
