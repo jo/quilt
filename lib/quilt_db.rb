@@ -14,12 +14,12 @@ class QuiltDB
 
   # list all documents
   def documents(database)
-    ["_design"] + get_db(database).documents["rows"].map { |doc| doc["id"] }.select { |e| e !~ /\A_design\// }
+    get_db(database).documents["rows"].map { |doc| doc["id"] }.select { |e| e !~ /\A_design\// }
   end
 
   # list all design documents
   def design_documents(database)
-    get_db(database).documents(:startkey => "_design/", :endkey => "_design/_")["rows"].map { |doc| doc["id"].sub(/\A_design\//, "") }
+    get_db(database).documents(:startkey => "_design/", :endkey => "_design0")["rows"].map { |doc| doc["id"].sub(/\A_design\//, "") }
   end
 
   def database?(database)
