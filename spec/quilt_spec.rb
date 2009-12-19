@@ -283,7 +283,44 @@ describe "Quilt" do
               it "file? should return false" do
                 @quilt.file?("/#{@database_id}/_design/design_document_id/_view/view_function_name").should be_false
               end
-              # TODO: step inside view result document
+              describe "offset.i.js" do
+                it "directory? should return false" do
+                  @quilt.directory?("/#{@database_id}/_design/design_document_id/_view/view_function_name/offset.i.js").should be_false
+                end
+                it "file? should return true" do
+                  @quilt.file?("/#{@database_id}/_design/design_document_id/_view/view_function_name/offset.i.js").should be_true
+                end
+              end
+              describe "total_rows.i.js" do
+                it "directory? should return false" do
+                  @quilt.directory?("/#{@database_id}/_design/design_document_id/_view/view_function_name/total_rows.i.js").should be_false
+                end
+                it "file? should return true" do
+                  @quilt.file?("/#{@database_id}/_design/design_document_id/_view/view_function_name/total_rows.i.js").should be_true
+                end
+              end
+              describe "rows/" do
+                it "contents should list view rows" do
+                  @quilt.contents("/#{@database_id}/_design/design_document_id/_view/view_function_name/rows").should == ["000"]
+                end
+                it "directory? should return true" do
+                  @quilt.directory?("/#{@database_id}/_design/design_document_id/_view/view_function_name/rows").should be_true
+                end
+                it "file? should return false" do
+                  @quilt.file?("/#{@database_id}/_design/design_document_id/_view/view_function_name/rows").should be_false
+                end
+                describe "000/" do
+                  it "contents should list view result row content" do
+                    @quilt.contents("/#{@database_id}/_design/design_document_id/_view/view_function_name/rows/000").should == ["id.js", "key.js", "value.js"]
+                  end
+                  it "directory? should return true" do
+                    @quilt.directory?("/#{@database_id}/_design/design_document_id/_view/view_function_name/rows/000").should be_true
+                  end
+                  it "file? should return false" do
+                    @quilt.file?("/#{@database_id}/_design/design_document_id/_view/view_function_name/rows/000").should be_false
+                  end
+                end
+              end
             end
           end
         end
