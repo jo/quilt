@@ -22,16 +22,6 @@ class QuiltDB
     get_db(database).documents(:startkey => "_design/", :endkey => "_design0")["rows"].map { |doc| doc["id"].sub(/\A_design\//, "") }
   end
 
-  def database?(database)
-    # TODO: should just be a HEAD request
-    database_info(database).is_a?(Hash)
-  end
-
-  def document?(database, id)
-    # TODO: should just be a HEAD request
-    get_document(database, id).is_a?(Hash)
-  end
-
   def get_document(database, id)
     get_db(database).get(id)
   end
@@ -45,12 +35,6 @@ class QuiltDB
   end
 
   private
-
-  # read the database info document for database name
-  # TODO: only used for database? which should just make a HEAD request
-  def database_info(database)
-    CouchRest.get File.join(@db_server, database)
-  end
 
   # returns a Couchrest database object for database name
   def get_db(name)
