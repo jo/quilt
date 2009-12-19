@@ -30,13 +30,18 @@ class Quilt < FuseFS::FuseDir
     when :_list
       doc = get_document_part(database, id, ["lists"])
       doc.keys.sort
+    when :_view
+      doc = get_document_part(database, id, ["views"])
+      doc.keys.sort
     when :list_function
       doc = get_document_part(database, id, ["views"])
       doc.keys.sort.map { |name| "#{name}.html" }
     when :show_function
       db.documents(database).map { |name| "#{name}.html" }
+    when :view_function
+      view_result(database, id, parts)
     when :design_document
-      (list_document(database, id, parts) + ["_list", "_show"]).sort
+      (list_document(database, id, parts) + ["_list", "_show", "_view"]).sort
     else
       list_document(database, id, parts)
     end
@@ -141,6 +146,16 @@ class Quilt < FuseFS::FuseDir
   def list_document(database, id, parts = [])
     doc = get_document_part(database, id, parts)
 
+    map_json(doc)
+  end
+
+  def view_result(database, id, parts = [])
+    doc = get_view_part(database, id, parts)
+
+    map_json(doc)
+  end
+
+  def map_json(doc)
     case doc
     when Hash
       # Hash is mapped to directory
@@ -184,6 +199,9 @@ class Quilt < FuseFS::FuseDir
     elsif id =~ /_design\// && parts == ["_list"]
       # /database_id/_design/design_document_id/_list
       :_list
+    elsif id =~ /_design\// && parts == ["_view"]
+      # /database_id/_design/design_document_id/_view
+      :_view
     elsif id =~ /_design\// && parts.size == 2 && parts.first == "_list"
       # /database_id/_design/design_document_id/_list/list_function_name
       :list_function
@@ -196,6 +214,12 @@ class Quilt < FuseFS::FuseDir
     elsif id =~ /_design\// && parts.size == 3 && parts.first == "_show"
       # /database_id/_design/design_document_id/_show/show_function_name/document_id
       :show_function_result
+    elsif id =~ /_design\// && parts.size == 2 && parts.first == "_view"
+      # /database_id/_design/design_document_id/_view/view_function_name
+      :view_function
+    elsif id =~ /_design\// && parts.size == 3 && parts.first == "_view"
+      # /database_id/_design/design_document_id/_view/view_function_name/document_id
+      :view_function_result
     else
       # /database_id/document_id
       # /database_id/document_id/object
@@ -210,6 +234,18 @@ class Quilt < FuseFS::FuseDir
   def get_document_part(database, id, parts = [])
     doc = db.get_document(database, id)
     parts.each do |part|
+      doc = doc ? doc[remove_extname(part)] : nil
+    end
+    doc
+  end
+
+  # get view document 'id' from 'database',
+  # or a part of that document.
+  def get_view_part(database, id, parts = [])
+    a, view_function_name, *rest = parts
+    view_id = [id.sub("_design/", ""), view_function_name].join("/")
+    doc = db.get_view(database, view_id)
+    rest.each do |part|
       doc = doc ? doc[remove_extname(part)] : nil
     end
     doc

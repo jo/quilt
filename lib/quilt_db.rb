@@ -36,6 +36,10 @@ class QuiltDB
     get_db(database).get(id)
   end
 
+  def get_view(database, id)
+    get_db(database).view(id)
+  end
+
   def save_document(database, doc)
     get_db(database).save_doc doc
   end

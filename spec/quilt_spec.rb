@@ -145,7 +145,7 @@ describe "Quilt" do
         # /database_id/_design/design_document_id
         describe "design_document_id/" do
           it "contents should list design documents content" do
-            @quilt.contents("/#{@database_id}/_design/design_document_id").should == ["_id.js", "_list", "_rev.js", "_show", "language.js", "lists", "name.js", "shows", "views"]
+            @quilt.contents("/#{@database_id}/_design/design_document_id").should == ["_id.js", "_list", "_rev.js", "_show", "_view", "language.js", "lists", "name.js", "shows", "views"]
           end
           it "directory? should return true" do
             @quilt.directory?("/#{@database_id}/_design/design_document_id").should be_true
@@ -259,6 +259,31 @@ describe "Quilt" do
                   @quilt.can_write?("/#{@database_id}/_design/design_document_id/_show/show_function_name/document_id.html").should be_false
                 end
               end
+            end
+          end
+          # /database_id/_design/design_document_id/_view
+          describe "_view/" do
+            it "contents should list view functions" do
+              @quilt.contents("/#{@database_id}/_design/design_document_id/_view").should == ["view_function_name"]
+            end
+            it "directory? should return true" do
+              @quilt.directory?("/#{@database_id}/_design/design_document_id/_view").should be_true
+            end
+            it "file? should return false" do
+              @quilt.file?("/#{@database_id}/_design/design_document_id/_view").should be_false
+            end
+            # /database_id/_design/design_document_id/_view/view_function_name
+            describe "view_function_name/" do
+              it "contents should list view result document contents" do
+                @quilt.contents("/#{@database_id}/_design/design_document_id/_view/view_function_name").should == ["offset.i.js", "rows", "total_rows.i.js"]
+              end
+              it "directory? should return true" do
+                @quilt.directory?("/#{@database_id}/_design/design_document_id/_view/view_function_name").should be_true
+              end
+              it "file? should return false" do
+                @quilt.file?("/#{@database_id}/_design/design_document_id/_view/view_function_name").should be_false
+              end
+              # TODO: step inside view result document
             end
           end
         end
