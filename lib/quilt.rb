@@ -15,58 +15,30 @@ class Quilt < FuseFS::FuseDir
 
   # list contents of path
   def contents(path)
-    database, id, *rest = extract_parts(path)
+    database, id, *parts = extract_parts(path)
 
-    if database.nil?
-      # /
+    case special_pathname(path)
+    when :root
       db.databases
-    elsif id.nil?
-      # /database_id
+    when :database
       ["_design"] + db.documents(database)
-    elsif id == "_design" && rest.empty?
-      # /database_id/_design
+    when :_design
       db.design_documents(database)
-    elsif id =~ /_design\// && rest == ["_show"]
-      # /database_id/_design/design_document_id/_show
+    when :_show
       doc = get_document_part(database, id, ["shows"])
       doc.keys.sort
-    elsif id =~ /_design\// && rest == ["_list"]
-      # /database_id/_design/design_document_id/_list
+    when :_list
       doc = get_document_part(database, id, ["lists"])
       doc.keys.sort
-    elsif id =~ /_design\// && rest.size == 2 && rest.first == "_list"
-      # /database_id/_design/design_document_id/_list/view_function_name
+    when :list_function
       doc = get_document_part(database, id, ["views"])
       doc.keys.sort.map { |name| "#{name}.html" }
-    elsif id =~ /_design\// && rest.size == 2 && rest.first == "_show"
-      # /database_id/_design/design_document_id/_list/show_function_name
+    when :show_function
       db.documents(database).map { |name| "#{name}.html" }
+    when :design_document
+      (list_document(database, id, parts) + ["_list", "_show"]).sort
     else
-      # /database_id/document_id
-      # /database_id/document_id/object
-      # /database_id/_design/design_document_id
-      # /database_id/_design/design_document_id/object
-      doc = get_document_part(database, id, rest)
-
-      arr = if doc.is_a?(Hash)
-              # Hash is mapped into directory
-              doc.keys.sort.map { |k| append_extname(k, doc[k]) }
-            elsif doc.is_a?(Array)
-              # Array is mapped into directory
-              doc.map { |k| append_extname(doc.index(k), k) }
-            else
-              []
-            end
-
-      if id =~ /_design\// && rest.empty?
-        # /database_id/_design/design_document_id
-        # add _list and _show directories
-        (arr + ["_list", "_show"]).sort
-      else
-        # we are inside a document
-        # list the json mapping content
-        arr
-      end
+      list_document(database, id, parts)
     end
 
   rescue => e
@@ -77,56 +49,55 @@ class Quilt < FuseFS::FuseDir
   def directory?(path)
     database, id, *parts = extract_parts(path)
 
-    # /
-    return true if database.nil?
-    # /database_id
-    return db.database?(database) if id.nil?
-    # /database_id/_design
-    return true if id == "_design" && parts.empty?
-    # /database_id/_design/design_document_id/_list
-    return true if id =~ /\A_design/ && parts == ["_list"]
-    # /database_id/_design/design_document_id/_list/list_function_name
-    return true if id =~ /\A_design/ && parts.size == 2 && parts.first == "_list"
-    # /database_id/_design/design_document_id/_show
-    return true if id =~ /\A_design/ && parts == ["_show"]
-    # /database_id/_design/design_document_id/_show/show_function_name
-    return true if id =~ /\A_design/ && parts.size == 2 && parts.first == "_show"
-    # all other
-    # look into document
-    res = get_document_part(database, id, parts)
-    # arrays and hashes are mapped into directories
-    res.is_a?(Hash) || res.is_a?(Array)
+    case special_pathname(path)
+    when nil
+      # look into document
+      res = get_document_part(database, id, parts)
+      # arrays and hashes are mapped into directories
+      res.is_a?(Hash) || res.is_a?(Array)
+    when :show_function_result, :list_function_result
+      false
+    else
+      # all other special paths are directories by now
+      true
+    end
 
   rescue => e
     puts e.message, e.backtrace
   end
 
   # is path a file?
-  # Every javascript or HTML is file, based on extension
   def file?(path)
-    [".js", ".html"].include?(File.extname(path))
+    case special_pathname(path)
+    when nil
+      # Every javascript or HTML is file, based on extension
+      [".js", ".html"].include?(File.extname(path))
+    when :show_function_result, :list_function_result
+      true
+    else
+      false
+    end
   end
 
   # reading file contents of path
   def read_file(path)
-    return unless file?(path)
     database, id, *parts = extract_parts(path)
-    if parts.first == "_show"
-      # eg http://127.0.0.1:5984/quilt-test-db/_design/document/_show/document
+
+    case special_pathname(path)
+    when :show_function_result
       parts.shift
       filename = File.join(@server_name, database, id, "_show", parts)
       file = open(remove_extname(filename))
       file.read if file
-    elsif parts.first == "_list"
-      # eg http://127.0.0.1:5984/quilt-test-db/_design/document/_list/by_name
+    when :list_function_result
       parts.shift
       filename = File.join(@server_name, database, id, "_list", parts)
       file = open(remove_extname(filename))
       file.read if file
     else
-      # read the document (part) at path
       get_document_part(database, id, parts).to_s
     end
+
   rescue => e
     puts e.message, e.backtrace
   end
@@ -140,9 +111,9 @@ class Quilt < FuseFS::FuseDir
   end
 
   # is path writable?
-  # every javascript file is writable
+  # every javascript file is writable, except ones starting with an underscore
   def can_write?(path)
-    File.extname(path) == ".js"
+    File.basename(path) !~ /\A_/ && File.extname(path) == ".js"
   end
 
   # writes content str to path
@@ -166,6 +137,22 @@ class Quilt < FuseFS::FuseDir
 
   private
 
+  # list contents of document and maps json
+  def list_document(database, id, parts = [])
+    doc = get_document_part(database, id, parts)
+
+    case doc
+    when Hash
+      # Hash is mapped to directory
+      doc.keys.sort.map { |k| append_extname(k, doc[k]) }
+    when Array
+      # Array is mapped to directory
+      doc.map { |k| append_extname(doc.index(k), k) }
+    else
+      []
+    end
+  end
+
   # gets the database, id and parts from path
   def extract_parts(path)
     database, id, *parts = scan_path(path)
@@ -173,6 +160,49 @@ class Quilt < FuseFS::FuseDir
       id << "/#{parts.shift}"
     end
     [database, id] + parts
+  end
+
+  # returns a path identifier for special paths
+  def special_pathname(path)
+    database, id, *parts = extract_parts(path)
+
+    if database.nil?
+      # /
+      :root
+    elsif id.nil?
+      # /database_id
+      :database
+    elsif id == "_design" && parts.empty?
+      # /database_id/_design
+      :_design
+    elsif id =~ /_design\// && parts.empty?
+      # /database_id/_design/design_document_id
+      :design_document
+    elsif id =~ /_design\// && parts == ["_show"]
+      # /database_id/_design/design_document_id/_show
+      :_show
+    elsif id =~ /_design\// && parts == ["_list"]
+      # /database_id/_design/design_document_id/_list
+      :_list
+    elsif id =~ /_design\// && parts.size == 2 && parts.first == "_list"
+      # /database_id/_design/design_document_id/_list/list_function_name
+      :list_function
+    elsif id =~ /_design\// && parts.size == 3 && parts.first == "_list"
+      # /database_id/_design/design_document_id/_list/list_function_name/view_function_name
+      :list_function_result
+    elsif id =~ /_design\// && parts.size == 2 && parts.first == "_show"
+      # /database_id/_design/design_document_id/_show/show_function_name
+      :show_function
+    elsif id =~ /_design\// && parts.size == 3 && parts.first == "_show"
+      # /database_id/_design/design_document_id/_show/show_function_name/document_id
+      :show_function_result
+    else
+      # /database_id/document_id
+      # /database_id/document_id/object
+      # /database_id/_design/design_document_id
+      # /database_id/_design/design_document_id/object
+      nil # path.to_sym
+    end
   end
 
   # get document 'id' from 'database',

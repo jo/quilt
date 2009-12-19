@@ -73,6 +73,21 @@ describe "Quilt" do
         it "file? should return false" do
           @quilt.file?("/#{@database_id}/document_id").should be_false
         end
+        # /database_id/document_id/_id.js
+        describe "_id.js" do
+          it "directory? should return false" do
+            @quilt.directory?("/#{@database_id}/document_id/_id.js").should be_false
+          end
+          it "file? should return true" do
+            @quilt.file?("/#{@database_id}/document_id/_id.js").should be_true
+          end
+          it "read_file should return contents" do
+            @quilt.read_file("/#{@database_id}/document_id/_id.js").should == "document_id"
+          end
+          it "can_write? should return false" do
+            @quilt.can_write?("/#{@database_id}/document_id/_id.js").should be_false
+          end
+        end
         # /database_id/document_id/name.js
         describe "name.js" do
           it "directory? should return false" do
@@ -139,7 +154,28 @@ describe "Quilt" do
             @quilt.file?("/#{@database_id}/_design/design_document_id").should be_false
           end
           # /database_id/_design/design_document_id/_id.js
+          describe "_id.js" do
+            it "directory? should return false" do
+              @quilt.directory?("/#{@database_id}/_design/design_document_id/_id.js").should be_false
+            end
+            it "file? should return true" do
+              @quilt.file?("/#{@database_id}/_design/design_document_id/_id.js").should be_true
+            end
+            it "read_file should return value" do
+              @quilt.read_file("/#{@database_id}/_design/design_document_id/_id.js").should == @design_document["_id"]
+            end
+            it "can_write? should return false" do
+              @quilt.can_write?("/#{@database_id}/_design/design_document_id/_id.js").should be_false
+            end
+          end
+          # /database_id/_design/design_document_id/name.js
           describe "name.js" do
+            it "directory? should return false" do
+              @quilt.directory?("/#{@database_id}/_design/design_document_id/name.js").should be_false
+            end
+            it "file? should return true" do
+              @quilt.file?("/#{@database_id}/_design/design_document_id/name.js").should be_true
+            end
             it "read_file should return value" do
               @quilt.read_file("/#{@database_id}/_design/design_document_id/name.js").should == @design_document["name"]
             end
