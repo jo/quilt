@@ -1,7 +1,6 @@
 Quilt
 =====
 
-Thin patterns facing CouchDB.
 Read and write CouchDB documents via FUSE userspace filesystem
 
 
