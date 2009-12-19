@@ -39,7 +39,7 @@ class Quilt < FuseFS::FuseDir
     when :show_function
       db.documents(database).map { |name| "#{name}.html" }
     when :view_function, :view_function_result
-      get_view_result(database, id, parts)
+      list_view_result(database, id, parts)
     when :design_document
       (list_document(database, id, parts) + ["_list", "_show", "_view"]).sort
     else
@@ -56,7 +56,7 @@ class Quilt < FuseFS::FuseDir
 
     case special_pathname(path)
     when :view_function_result
-      doc = get_view_part(database, id, parts)
+      doc = get_view_result_part(database, id, parts)
       # arrays and hashes are mapped into directories
       doc.is_a?(Hash) || doc.is_a?(Array)
     when nil
@@ -103,6 +103,8 @@ class Quilt < FuseFS::FuseDir
       filename = File.join(@server_name, database, id, "_list", parts)
       file = open(remove_extname(filename))
       file.read if file
+    when :view_function_result
+      get_view_result_part(database, id, parts).to_s
     else
       get_document_part(database, id, parts).to_s
     end
@@ -122,7 +124,14 @@ class Quilt < FuseFS::FuseDir
   # is path writable?
   # every javascript file is writable, except ones starting with an underscore
   def can_write?(path)
-    File.basename(path) !~ /\A_/ && File.extname(path) == ".js"
+    database, id, *parts = extract_parts(path)
+
+    case special_pathname(path)
+    when :show_function_result, :list_function_result, :view_function_result
+      false
+    else
+      File.basename(path) !~ /\A_/ && File.extname(path) == ".js"
+    end
   end
 
   # writes content str to path
@@ -153,8 +162,8 @@ class Quilt < FuseFS::FuseDir
     map_json(doc)
   end
 
-  def get_view_result(database, id, parts = [])
-    doc = get_view_part(database, id, parts)
+  def list_view_result(database, id, parts = [])
+    doc = get_view_result_part(database, id, parts)
 
     map_json(doc)
   end
@@ -237,26 +246,25 @@ class Quilt < FuseFS::FuseDir
   # or a part of the document.
   def get_document_part(database, id, parts = [])
     doc = db.get_document(database, id)
-    parts.each do |part|
-      doc = doc ? doc[remove_extname(part)] : nil
-    end
-    doc
+    get_part(doc, parts)
   end
 
-  # get view document 'id' from 'database',
-  # or a part of that document.
-  def get_view_part(database, id, parts = [])
+  # get view result, or a part of that document.
+  def get_view_result_part(database, id, parts = [])
     a, view_function_name, *rest = parts
     view_id = [id.sub("_design/", ""), view_function_name].join("/")
     doc = db.get_view(database, view_id)
-    rest.each do |part|
+    get_part(doc, rest)
+  end
+
+  def get_part(doc, parts)
+    doc = doc.dup
+    parts.each do |part|
       case doc
       when Hash
         doc = doc[remove_extname(part)]
-      when /\A\d+\z/
-        doc = doc[doc.to_i]
-      else
-        doc = nil
+      when Array
+        doc = doc[part.to_i]
       end
     end
     doc
@@ -285,11 +293,12 @@ class Quilt < FuseFS::FuseDir
   def append_extname(key, value)
     basename = key.is_a?(Integer) ? "%.3d" % key : key
 
-    if value.is_a?(Float)
+    case value
+    when Float
       "#{basename}.f.js"
-    elsif value.is_a?(Integer)
+    when Integer
       "#{basename}.i.js"
-    elsif value.is_a?(String)
+    when nil, String
       "#{basename}.js"
     else
       basename
