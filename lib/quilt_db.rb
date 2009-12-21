@@ -34,7 +34,22 @@ class QuiltDB
     get_db(database).save_doc doc
   end
 
+  def database?(database)
+    # TODO: should just be a HEAD request
+    database_info(database).is_a?(Hash) rescue false
+  end
+   
+  def document?(database, id)
+    # TODO: should just be a HEAD request
+    get_document(database, id).is_a?(Hash) rescue false
+  end
+
   private
+    # read the database info document for database name
+  #   # TODO: only used for database? which should just make a HEAD request
+  def database_info(database)
+    CouchRest.get File.join(@db_server, database)
+  end
 
   # returns a Couchrest database object for database name
   def get_db(name)

@@ -66,6 +66,10 @@ class Quilt < FuseFS::FuseDir
       doc.is_a?(Hash) || doc.is_a?(Array)
     when :show_function_result, :list_function_result
       false
+    when :database
+      db.database?(database)
+    when :document
+      db.document?(database, id)
     else
       # all other special paths are directories by now
       true
@@ -153,6 +157,48 @@ class Quilt < FuseFS::FuseDir
     true
   end
 
+  def can_mkdir?(path)
+    database, id, *parts = extract_parts(path)
+
+    case special_pathname(path)
+    when :root, :_design, :_list, :list_function, :_show, :show_function, :_view, :view_function, :view_function_result
+      false
+    when :database
+      !db.database?(database)
+    when :design_document, :document
+      !db.document?(database, id)
+    else
+      !get_document_part(database, id, parts)
+    end
+
+  rescue => e
+    puts e.message, e.backtrace
+  end
+
+  def mkdir(path)
+  end
+
+  def can_rmdir?(path)
+    database, id, *parts = extract_parts(path)
+
+    case special_pathname(path)
+    when :root, :_design, :_list, :list_function, :_show, :show_function, :_view, :view_function, :view_function_result
+      false
+    when :database
+      db.database?(database)
+    when :document, :design_document
+      db.document?(database, id)
+    else
+      get_document_part(database, id, parts).empty? rescue nil
+    end
+
+  rescue => e
+    puts e.message, e.backtrace
+  end
+
+  def rmdir(path)
+  end
+
   private
 
   # list contents of document and maps json
@@ -233,8 +279,10 @@ class Quilt < FuseFS::FuseDir
     elsif id =~ /_design\// && parts.size >= 3 && parts.first == "_view"
       # /database_id/_design/design_document_id/_view/view_function_name/document_id
       :view_function_result
-    else
+    elsif parts.empty?
       # /database_id/document_id
+      :document
+    else
       # /database_id/document_id/object
       # /database_id/_design/design_document_id
       # /database_id/_design/design_document_id/object
