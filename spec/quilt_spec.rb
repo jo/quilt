@@ -155,6 +155,9 @@ describe "Quilt" do
           it "can_write? should return false" do
             @quilt.can_write?("/#{@database_id}/document_id/_id.js").should be_false
           end
+          it "can_delete? should return false" do
+            @quilt.can_delete?("/#{@database_id}/document_id/_id.js").should be_false
+          end
         end
 
         # /database_id/document_id/name.js
@@ -174,6 +177,10 @@ describe "Quilt" do
           it "write_to should update document" do
             @quilt.write_to("/#{@database_id}/document_id/name.js", "value").should be_true
           end
+          it "can_delete? should return false" do
+            @quilt.can_delete?("/#{@database_id}/document_id/name.js").should be_true
+          end
+          it "delete should update document"
         end
 
         # /database_id/document_id/object
@@ -286,6 +293,9 @@ describe "Quilt" do
             it "can_write? should return false" do
               @quilt.can_write?("/#{@database_id}/_design/design_document_id/_id.js").should be_false
             end
+            it "can_delete? should return false" do
+              @quilt.can_delete?("/#{@database_id}/_design/design_document_id/_id.js").should be_false
+            end
           end
           
           # /database_id/_design/design_document_id/name.js
@@ -305,6 +315,10 @@ describe "Quilt" do
             it "write_to should update _design/design_document_id" do
               @quilt.write_to("/#{@database_id}/_design/design_document_id/name.js", "value").should be_true
             end
+            it "can_delete? should return true" do
+              @quilt.can_delete?("/#{@database_id}/_design/design_document_id/name.js").should be_true
+            end
+            it "delete should update design document"
           end
           
           # /database_id/_design/design_document_id/_list
@@ -356,6 +370,9 @@ describe "Quilt" do
                 end
                 it "can_write? should return false" do
                   @quilt.can_write?("/#{@database_id}/_design/design_document_id/_list/list_function_name/view_function_name.html").should be_false
+                end
+                it "can_delete? should return false" do
+                  @quilt.can_delete?("/#{@database_id}/_design/design_document_id/_list/list_function_name/view_function_name.html").should be_false
                 end
               end
             end
@@ -411,6 +428,9 @@ describe "Quilt" do
                 it "can_write? should return false" do
                   @quilt.can_write?("/#{@database_id}/_design/design_document_id/_show/show_function_name/document_id.html").should be_false
                 end
+                it "can_delete? should return false" do
+                  @quilt.can_delete?("/#{@database_id}/_design/design_document_id/_show/show_function_name/document_id.html").should be_false
+                end
               end
             end
           end
@@ -457,6 +477,9 @@ describe "Quilt" do
                 it "file? should return true" do
                   @quilt.file?("/#{@database_id}/_design/design_document_id/_view/view_function_name/offset.i.js").should be_true
                 end
+                it "can_delete? should return false" do
+                  @quilt.can_delete?("/#{@database_id}/_design/design_document_id/_view/view_function_name/offset.i.js").should be_false
+                end
               end
               describe "total_rows.i.js" do
                 it "directory? should return false" do
@@ -464,6 +487,9 @@ describe "Quilt" do
                 end
                 it "file? should return true" do
                   @quilt.file?("/#{@database_id}/_design/design_document_id/_view/view_function_name/total_rows.i.js").should be_true
+                end
+                it "can_delete? should return false" do
+                  @quilt.can_delete?("/#{@database_id}/_design/design_document_id/_view/view_function_name/total_rows.i.js").should be_false
                 end
               end
               describe "rows/" do
@@ -511,6 +537,9 @@ describe "Quilt" do
                     it "can_write? should return false" do
                       @quilt.can_write?("/#{@database_id}/_design/design_document_id/_view/view_function_name/rows/000/id.js").should be_false
                     end
+                    it "can_delete? should return false" do
+                      @quilt.can_delete?("/#{@database_id}/_design/design_document_id/_view/view_function_name/rows/000/id.js").should be_false
+                    end
                   end
                   describe "key.js" do
                     it "directory? should return false" do
@@ -525,6 +554,9 @@ describe "Quilt" do
                     it "can_write? should return false" do
                       @quilt.can_write?("/#{@database_id}/_design/design_document_id/_view/view_function_name/rows/000/key.js").should be_false
                     end
+                    it "can_delete? should return false" do
+                      @quilt.can_delete?("/#{@database_id}/_design/design_document_id/_view/view_function_name/rows/000/key.js").should be_false
+                    end
                   end
                   describe "value.js" do
                     it "directory? should return false" do
@@ -538,6 +570,9 @@ describe "Quilt" do
                     end
                     it "can_write? should return false" do
                       @quilt.can_write?("/#{@database_id}/_design/design_document_id/_view/view_function_name/rows/000/value.js").should be_false
+                    end
+                    it "can_delete? should return false" do
+                      @quilt.can_delete?("/#{@database_id}/_design/design_document_id/_view/view_function_name/rows/000/value.js").should be_false
                     end
                   end
                 end

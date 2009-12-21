@@ -147,7 +147,14 @@ class Quilt < FuseFS::FuseDir
   # can I delete path?
   # This helps editors, but we don't really use it.
   def can_delete?(path)
-    true
+    return false if File.basename(path) =~ /\A_/
+
+    case special_pathname(path)
+    when :show_function_result, :list_function_result, :view_function_result
+      false
+    else
+      true
+    end
   end
 
   def can_mkdir?(path)
