@@ -72,6 +72,7 @@ class Quilt < FuseFS::FuseDir
       db.document?(database, id)
     else
       # all other special paths are directories by now
+      # TODO: thats not so good.
       true
     end
 
