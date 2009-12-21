@@ -117,14 +117,6 @@ class Quilt < FuseFS::FuseDir
     puts e.message, e.backtrace
   end
 
-  # calculate file size
-  def size(path)
-    return 4096 unless file?(path)
-    str = read_file(path)
-    return 0 unless str
-    str.length
-  end
-
   # is path writable?
   # every javascript file is writable, except ones starting with an underscore
   def can_write?(path)
@@ -176,6 +168,19 @@ class Quilt < FuseFS::FuseDir
   end
 
   def mkdir(path)
+    database, id, *parts = extract_parts(path)
+
+    case special_pathname(path)
+    when :database
+      puts "create db"
+    when :document, :design_document
+      puts "create document"
+    else
+      puts "create property"
+    end
+
+  rescue => e
+    puts e.message, e.backtrace
   end
 
   def can_rmdir?(path)
@@ -197,6 +202,19 @@ class Quilt < FuseFS::FuseDir
   end
 
   def rmdir(path)
+    database, id, *parts = extract_parts(path)
+
+    case special_pathname(path)
+    when :database
+      puts "delete db"
+    when :document, :design_document
+      puts "delete document"
+    else
+      puts "delete property"
+    end
+
+  rescue => e
+    puts e.message, e.backtrace
   end
 
   private
@@ -222,8 +240,6 @@ class Quilt < FuseFS::FuseDir
     when Array
       # Array is mapped to directory
       doc.map { |k| append_extname(doc.index(k), k) }
-    else
-      []
     end
   end
 
