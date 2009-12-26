@@ -34,6 +34,16 @@ class QuiltDB
     get_db(database).save_doc doc
   end
 
+  def create_document(database, id)
+    get_db(database).save_doc "_id" => id
+  end
+
+  def delete_document(database, id)
+    db = get_db(database)
+    doc = db.get id
+    db.delete_doc doc
+  end
+
   def database?(database)
     # TODO: should just be a HEAD request
     database_info(database).is_a?(Hash) rescue false
@@ -42,6 +52,14 @@ class QuiltDB
   def document?(database, id)
     # TODO: should just be a HEAD request
     get_document(database, id).is_a?(Hash) rescue false
+  end
+
+  def create_db(name)
+    CouchRest.database!(File.join(@db_server, name))
+  end
+
+  def delete_db(name)
+    CouchRest.database(File.join(@db_server, name)).delete!
   end
 
   private

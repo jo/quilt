@@ -8,8 +8,10 @@ describe "Quilt" do
   before do
     @quilt = Quilt.new 
     @database_id = "quilt-test-db"
+    @new_database_id = "quilt-test-new-db"
     @server_name = @quilt.server_name
     CouchRest.delete(File.join(@server_name, @database_id)) rescue nil
+    CouchRest.delete(File.join(@server_name, @new_database_id)) rescue nil
     @db = CouchRest.database!(File.join(@server_name, @database_id))
 
     @document = {
@@ -70,7 +72,17 @@ describe "Quilt" do
       it "can_mkdir? should return true" do
         @quilt.can_mkdir?("/unknown_database").should be_true
       end
-      it "mkdir should create database"
+    end
+
+    # /new_database
+    describe "#{@new_database_id}/" do
+      it "mkdir should create database which rmdir should remove" do
+        @quilt.directory?("/#{@new_database_id}").should be_false
+        @quilt.mkdir("/#{@new_database_id}").should be_true
+        @quilt.directory?("/#{@new_database_id}").should be_true
+        @quilt.rmdir("/#{@new_database_id}").should be_true
+        @quilt.directory?("/#{@new_database_id}").should be_false
+      end
     end
 
     # /database_id
@@ -90,7 +102,6 @@ describe "Quilt" do
       it "can_rmdir? should return true" do
         @quilt.can_rmdir?("/#{@database_id}").should be_true
       end
-      it "rmdir should delete document"
 
       # /database_id/unknown_document
       describe "unknown_document/" do
@@ -125,7 +136,10 @@ describe "Quilt" do
         it "can_rmdir? should return true" do
           @quilt.can_rmdir?("/#{@database_id}/document_id").should be_true
         end
-        it "rmdir should delete database"
+        it "rmdir should delete document" do
+          @quilt.rmdir("/#{@database_id}/document_id").should be_true
+          @quilt.directory?("/#{@database_id}/document_id").should be_false
+        end
         
         # /database_id/document_id/unknown_attribute
         describe "unknown_attribute/" do
@@ -238,7 +252,7 @@ describe "Quilt" do
           it "can_rmdir? should return true when empty" do
             @quilt.can_rmdir?("/#{@database_id}/document_id/empty").should be_true
           end
-          it "rmdir should remove empty from dorument tree when empty"
+          it "rmdir should remove empty from document tree when empty"
         end
       end
       
@@ -259,6 +273,17 @@ describe "Quilt" do
         it "can_rmdir? should return false" do
           @quilt.can_rmdir?("/#{@database_id}/_design").should be_false
         end
+
+        # /database_id/_design/new_design_document_id
+        describe "new_design_document_id/" do
+          it "mkdir should create design document which rmdir should remove" do
+            @quilt.directory?("/#{@database_id}/_design/new_design_document_id").should be_false
+            @quilt.mkdir("/#{@database_id}/_design/new_design_document_id").should be_true
+            @quilt.directory?("/#{@database_id}/_design/new_design_document_id").should be_true
+            @quilt.rmdir("/#{@database_id}/_design/new_design_document_id").should be_true
+            @quilt.directory?("/#{@database_id}/_design/new_design_document_id").should be_false
+          end
+        end
         
         # /database_id/_design/design_document_id
         describe "design_document_id/" do
@@ -277,7 +302,6 @@ describe "Quilt" do
           it "can_rmdir? should return true" do
             @quilt.can_rmdir?("/#{@database_id}/_design/design_document_id").should be_true
           end
-          it "rmdir should remove design document"
           
           # /database_id/_design/design_document_id/_id.js
           describe "_id.js" do

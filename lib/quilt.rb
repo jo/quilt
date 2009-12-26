@@ -68,7 +68,7 @@ class Quilt < FuseFS::FuseDir
       false
     when :database
       db.database?(database)
-    when :document
+    when :document, :design_document
       db.document?(database, id)
     else
       # all other special paths are directories by now
@@ -179,13 +179,14 @@ class Quilt < FuseFS::FuseDir
 
     case special_pathname(path)
     when :database
-      puts "create db"
+      @db.create_db(database)
     when :document, :design_document
-      puts "create document"
+      @db.create_document(database, id)
     else
       puts "create property"
     end
 
+    true
   rescue => e
     puts e.message, e.backtrace
   end
@@ -213,13 +214,14 @@ class Quilt < FuseFS::FuseDir
 
     case special_pathname(path)
     when :database
-      puts "delete db"
+      @db.delete_db(database)
     when :document, :design_document
-      puts "delete document"
+      @db.delete_document(database, id)
     else
       puts "delete property"
     end
 
+    true
   rescue => e
     puts e.message, e.backtrace
   end
