@@ -145,7 +145,6 @@ class Quilt < FuseFS::FuseDir
   end
 
   # can I delete path?
-  # This helps editors, but we don't really use it.
   def can_delete?(path)
     return false if File.basename(path) =~ /\A_/
 
