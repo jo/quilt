@@ -31,6 +31,7 @@
 		pre { padding: 15px;}
     hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
     .footer { text-align:center; padding-top:30px; font-style: italic; }
+    ol li { margin-bottom: 1ex; }
 	</style>
 	
 </head>
@@ -86,6 +87,84 @@ gem install couchrest</pre>
     <p>Relax!</p>
 
     <p><strong>Tip:</strong> <code>touch _delete</code> will delete a database or document.</p>
+
+    <h2>Digging deeper</h2>
+
+    <p>CouchDB is a document based Database System. The documents are stored in JSON format. Documents can have so called attachements, so CouchDB can easyly store files.</p>
+    <p>CouchDB holds application code in Design Documents. These documents are normal CouchDB documents, which have the prefix <code>_design/</code> as id, for example <code>_design/Site</code>.
+    Design documents include application code, that is views (Map-Reduce functions), show and list transformations.
+    Application Assets, as Images and CSS files, are stored inside design documents as attachements, too.</p>
+    
+    <p>Quilt maps CouchDB documents to a filesystem, provided by FuseFS.
+    Quilt is currently using Ruby to create a Fuse Filesystem. The Filesystem is mounted to the <code>app/</code> directory.</p>
+    
+    <p>The CouchDB documents are mapped to a directory structure in the following way:</p>
+    
+    <ol>
+      <li><strong>Databases</strong> are directories in the root folder</li>
+      <li>each <strong>Document</strong> is a directory named after the id of the document. Design documents are stored in a subfolder called <code>_design</code></li>
+      <li>a <strong>Key</strong> in the hash of the document is a directory inside the documents folder</li>
+      <li>the <strong>Value</strong> of the hash lives inside the key folder</li>
+      <li><strong>Strings</strong> are plain files with the extension <code>.js</code></li>
+      <li><strong>Floats</strong> are plain files with the extension <code>.f.js</code></li>
+    
+    <li><strong>Integers</strong> are plain files with the extension <code>.i.js</code></li>
+    <li><strong>Arrays</strong> are directories where <em>all</em> elements are numbered, like <code>000</code>, <code>001</code> and <code>002.js</code></li>
+    </ol>
+    
+    <h4>A JSON CouchDB document (design document)</h4>
+    <pre>{
+   "_id": "_design/Site",
+   "_rev": "955-e08d9e52c17159fa1c981202ae6bfcbb",
+   "language": "javascript",
+   "views": {
+       "all": {
+           "map": "function(doc) { emit(doc['_id'], 1) }"
+       },
+       "by_domain": {
+           "map": "function(doc) { emit(doc['domain'], 1) }"
+       }
+   }
+}</pre>
+
+    <h4>The corresponding Quilt filesystem</h4>
+    <pre>couchdb/
+  _design/
+    Site/
+      _id.js                # _design/Site
+      _rev.js               # 955-e08d9e52c17159fa1c981202ae6bfcbb
+      _list/
+      _show/
+      _view/
+        all/
+          offset.i.js       # 0
+          rows/
+          total_rows.i.js   # 0
+        by_domain/
+          offset.i.js       # 0
+          rows/
+          total_rows.i.js   # 0
+      language.js           # javascript
+      views/
+        all/
+          map.js            # function(doc) { emit(doc['_id'], 1) }
+        by_domain/
+          map.js            # function(doc) { emit(doc['domain'], 1) }</pre>
+    <p>(Here the database had no other documents)</p>
+
+    <h2>Getting involved</h2>
+    
+    <p>If you share my euphoria on this approach feel free to fork my Quilt and start experimenting with Rubys FuseFS API and CouchDB.</p>
+    
+    <p>Some resources you might consider as a starting point:</p>
+    
+    <ul>
+      <li><a href="http://couchdb.apache.org/">CouchDB Project Page</a></li>
+      <li><a href="http://rubyforge.org/projects/fusefs/">Ruby FuseFS RubyForge Project Page</a></li>
+    
+      <li><a href="http://books.couchdb.org/relax/">CouchDB: The Definitive Guide</a></li>
+    </ul>
+
 
     <h2>Author</h2>
     <p>TF Johannes Jörg Schmidt &lt;<a href="mailto:schmidt@netzmerk.com">schmidt@netzmerk.com</a>&gt;</p>
