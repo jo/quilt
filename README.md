@@ -118,4 +118,4 @@ You can create databases and documents with mkdir, properties via echo >> and so
 Databases and documents can be deleted via a touch /database_id/_delete or /database_id/document_id/_delete.
 
 
-Read more on the projectpage http://jo.github.com/quilt/.
+Read more on the [projectpage](http://jo.github.com/quilt/).
