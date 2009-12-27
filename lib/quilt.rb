@@ -131,6 +131,8 @@ class Quilt < FuseFS::FuseDir
     database, id, *parts = extract_parts(path)
 
     case special_pathname(path)
+    when :switch_delete_database, :switch_delete_document
+      true
     when :show_function_result, :list_function_result, :view_function_result
       false
     else
@@ -220,12 +222,8 @@ class Quilt < FuseFS::FuseDir
     database, id, *parts = extract_parts(path)
 
     case special_pathname(path)
-    when :root, :_design, :_list, :list_function, :_show, :show_function, :_view, :view_function, :view_function_result
+    when :root, :_design, :_list, :list_function, :_show, :show_function, :_view, :view_function, :view_function_result, :database, :document, :design_document
       false
-    when :database
-      db.database?(database)
-    when :document, :design_document
-      db.document?(database, id)
     else
       get_document_part(database, id, parts).empty? rescue nil
     end
@@ -234,22 +232,26 @@ class Quilt < FuseFS::FuseDir
     puts e.message, e.backtrace
   end
 
-  def rmdir(path)
+  def touch(path)
     database, id, *parts = extract_parts(path)
 
     case special_pathname(path)
-    when :database
+    when :switch_delete_database
       @db.delete_db(database)
-    when :document, :design_document
+    when :switch_delete_document
       @db.delete_document(database, id)
-    else
-      # fetch document
-      doc = db.get_document(database, id)
-      # remove object
-      update_value(doc, parts, nil)
-      # save document
-      db.save_document(database, doc)
     end
+  end
+
+  def rmdir(path)
+    database, id, *parts = extract_parts(path)
+
+    # fetch document
+    doc = db.get_document(database, id)
+    # remove object
+    update_value(doc, parts, nil)
+    # save document
+    db.save_document(database, doc)
 
   rescue => e
     puts e.message, e.backtrace
@@ -297,6 +299,10 @@ class Quilt < FuseFS::FuseDir
     if database.nil?
       # /
       :root
+    elsif id == "_delete"
+      :switch_delete_database
+    elsif parts.size == 1 && parts.first == "_delete"
+      :switch_delete_document
     elsif id.nil?
       # /database_id
       :database

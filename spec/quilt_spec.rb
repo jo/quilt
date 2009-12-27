@@ -76,11 +76,11 @@ describe "Quilt" do
 
     # /new_database
     describe "#{@new_database_id}/" do
-      it "mkdir should create database which rmdir should remove" do
+      it "mkdir should create database which touch _delete should remove" do
         @quilt.directory?("/#{@new_database_id}").should be_false
         @quilt.mkdir("/#{@new_database_id}").should be_true
         @quilt.directory?("/#{@new_database_id}").should be_true
-        @quilt.rmdir("/#{@new_database_id}").should be_true
+        @quilt.touch("/#{@new_database_id}/_delete").should be_true
         @quilt.directory?("/#{@new_database_id}").should be_false
       end
     end
@@ -99,8 +99,8 @@ describe "Quilt" do
       it "can_mkdir? should return false" do
         @quilt.can_mkdir?("/#{@database_id}").should be_false
       end
-      it "can_rmdir? should return true" do
-        @quilt.can_rmdir?("/#{@database_id}").should be_true
+      it "can_rmdir? should return false" do
+        @quilt.can_rmdir?("/#{@database_id}").should be_false
       end
 
       # /database_id/unknown_document
@@ -133,11 +133,11 @@ describe "Quilt" do
         it "can_mkdir? should return false" do
           @quilt.can_mkdir?("/#{@database_id}/document_id").should be_false
         end
-        it "can_rmdir? should return true" do
-          @quilt.can_rmdir?("/#{@database_id}/document_id").should be_true
+        it "can_rmdir? should return false" do
+          @quilt.can_rmdir?("/#{@database_id}/document_id").should be_false
         end
-        it "rmdir should delete document" do
-          @quilt.rmdir("/#{@database_id}/document_id").should be_true
+        it "touch _delete should delete document" do
+          @quilt.touch("/#{@database_id}/document_id/_delete").should be_true
           @quilt.directory?("/#{@database_id}/document_id").should be_false
         end
         
@@ -287,11 +287,11 @@ describe "Quilt" do
 
         # /database_id/_design/new_design_document_id
         describe "new_design_document_id/" do
-          it "mkdir should create design document which rmdir should remove" do
+          it "mkdir should create design document which touch _delete should remove" do
             @quilt.directory?("/#{@database_id}/_design/new_design_document_id").should be_false
             @quilt.mkdir("/#{@database_id}/_design/new_design_document_id").should be_true
             @quilt.directory?("/#{@database_id}/_design/new_design_document_id").should be_true
-            @quilt.rmdir("/#{@database_id}/_design/new_design_document_id").should be_true
+            @quilt.touch("/#{@database_id}/_design/new_design_document_id/_delete").should be_true
             @quilt.directory?("/#{@database_id}/_design/new_design_document_id").should be_false
           end
         end
@@ -310,8 +310,8 @@ describe "Quilt" do
           it "can_mkdir? should return false" do
             @quilt.can_mkdir?("/#{@database_id}/_design/design_document_id").should be_false
           end
-          it "can_rmdir? should return true" do
-            @quilt.can_rmdir?("/#{@database_id}/_design/design_document_id").should be_true
+          it "can_rmdir? should return false" do
+            @quilt.can_rmdir?("/#{@database_id}/_design/design_document_id").should be_false
           end
           
           # /database_id/_design/design_document_id/_id.js
