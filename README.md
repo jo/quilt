@@ -115,3 +115,4 @@ inside the base directory run
 Your Application code will now be available at ./app/<CouchDB server url>.
 
 
+Read more on the projectpage http://jo.github.com/quilt/.
