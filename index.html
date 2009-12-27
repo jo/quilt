@@ -10,7 +10,7 @@
 	<style type="text/css">
 		body {
   		margin-top: 1.0em;
-  		background-color: #f8e7d3;
+  		background-color: white;
 		  font-family: "Helvetica,Arial,FreeSans"; 
   		color: #000000;
     }
@@ -46,35 +46,39 @@
     </div>
       
     <h1><a href="http://github.com/jo/quilt">Quilt</a> 
-      <span class="small">by <a href="http://github.com/jo">jo</a></span></h1>
+      <span class="small">by <a href="http://github.com/jo">TF</a></span></h1>
 
     <div class="description">
-      Access CouchDB from filesystem.
+      Access CouchDB JSON documents from filesystem
     </div>
 
-    <p>CouchDB is a document based Database System. The documents are stored in JSON format. Documents can have so called attachements, so CouchDB can easyly store files.
-CouchDB holds application code in Design Documents. These documents are normal CouchDB documents, which have the prefix *\_design/* as id, for example *\_design/Site*.
-Design documents hold application code, that is views (Map-Reduce functions), show and list transformations.
-Application Assets, as Images and CSS files, are stored inside design documents as attachements, too.
+    <img src="screenshot.png" alt="Screenshot File Browser"/>
 
-Quilt maps CouchDB documents to a filesystem, provided by FuseFS.
-</p><h2>Dependencies</h2>
-<p>debs: ruby, rubygems, libfusefs-ruby, couchdb
-gems: couchrest
-</p>
-<h2>Install</h2>
-<p>apt-get install ruby rubygems libfusefs-ruby
+<h2>Get your Quilt</h2>
+<h3>Dependencies:</h3>
+<p>By now Quilt is in active development and alpha or pre-alpha software or whatever you say.<br />
+That means among others Quilt has no installation support with common package managers like gems or debs.</p>
+<pre>
+apt-get install ruby rubygems libfusefs-ruby
 apt-get install couchdb
 gem install couchrest
+</pre>
+<p>Today the only and by the way very simple way is to install Quilt from source:</p>
+<h3>Installation</h3>
+<pre>git clone git://github.com/jo/quilt.git</pre>
+<p>Das wars!</p>
+<h2>Set out your Quilt</h2>
+<p>Change to your quilt installation directory (eg <code>~/quilt</code>) and type the following few words:</p>
+<pre>script/fs</pre>
+<h2>Sit down on your Couch</h2>
 
-git clone git://github.com/jo/quilt.git</p>
-<h2>License</h2>
-<p>TFL</p>
-<h2>Authors</h2>
-<p>Johannes J. Schmidt (schmidt@netzmerk.com)</p>
-<h2>Contact</h2>
-<p>Johannes Jörg Schmidt, TF (schmidt@netzmerk.com)</p>
+<p>Your CouchDB databases will be mapped to your filesystem at</p>
+<pre>~/quilt/app/&lt;ServerName&gt;/</pre>
+<p>Relax!</p>
 
+
+    <h2>Author</h2>
+    <p>Johannes Jörg Schmidt, TF (schmidt@netzmerk.com)</p>
 
     <h2>Download</h2>
     <p>
