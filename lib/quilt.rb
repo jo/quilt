@@ -82,12 +82,19 @@ class Quilt < FuseFS::FuseDir
 
   # is path a file?
   def file?(path)
+    database, id, *parts = extract_parts(path)
+
     case special_pathname(path)
-    when nil, :view_function_result
-      # Every javascript or HTML is file, based on extension
-      [".js", ".html"].include?(File.extname(path))
     when :show_function_result, :list_function_result
       true
+    when nil
+      # look into document
+      doc = get_document_part(database, id, parts)
+      # only arrays and hashes are mapped into directories
+      !doc.nil? && !(doc.is_a?(Hash) || doc.is_a?(Array))
+    when :view_function_result
+      # Every javascript or HTML is file, based on extension
+      [".js", ".html"].include?(File.extname(path))
     else
       false
     end
@@ -156,6 +163,20 @@ class Quilt < FuseFS::FuseDir
     end
   end
 
+  def delete(path)
+    database, id, *parts = extract_parts(path)
+
+    # fetch document
+    doc = db.get_document(database, id)
+    # remove object
+    remove_object(doc, parts)
+    # save document
+    db.save_document(database, doc)
+
+  rescue => e
+    puts e.message, e.backtrace
+  end
+
   def can_mkdir?(path)
     database, id, *parts = extract_parts(path)
 
@@ -183,10 +204,14 @@ class Quilt < FuseFS::FuseDir
     when :document, :design_document
       @db.create_document(database, id)
     else
-      puts "create property"
+      # fetch document
+      doc = db.get_document(database, id)
+      # insert empty object
+      update_value(doc, parts, {})
+      # save document
+      db.save_document(database, doc)
     end
 
-    true
   rescue => e
     puts e.message, e.backtrace
   end
@@ -218,10 +243,14 @@ class Quilt < FuseFS::FuseDir
     when :document, :design_document
       @db.delete_document(database, id)
     else
-      puts "delete property"
+      # fetch document
+      doc = db.get_document(database, id)
+      # remove object
+      update_value(doc, parts, nil)
+      # save document
+      db.save_document(database, doc)
     end
 
-    true
   rescue => e
     puts e.message, e.backtrace
   end
@@ -352,6 +381,19 @@ class Quilt < FuseFS::FuseDir
       hash[key] = value
     else
       hash[key] = update_value(hash[key], keys, value)
+    end
+    hash
+  end
+
+  # removes an object from a hash
+  # Example:
+  #  remove_object({:a => { :b => 'c'}}, [:a, :b]) #=> {:a => { }}
+  def remove_object(hash, keys)
+    key = remove_extname(keys.shift)
+    if keys.empty?
+      hash.delete(key)
+    else
+      hash[key] = remove_object(hash[key], keys)
     end
     hash
   end

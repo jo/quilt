@@ -152,7 +152,12 @@ describe "Quilt" do
           it "can_mkdir? should return true" do
             @quilt.can_mkdir?("/#{@database_id}/document_id/unknown_attribute").should be_true
           end
-          it "mkdir should update document"
+          it "mkdir should update document while rmdir should reset it" do
+            @quilt.mkdir("/#{@database_id}/document_id/unknown_attribute").should be_true
+            @quilt.directory?("/#{@database_id}/document_id/unknown_attribute").should be_true
+            @quilt.rmdir("/#{@database_id}/document_id/unknown_attribute").should be_true
+            @quilt.directory?("/#{@database_id}/document_id/unknown_attribute").should be_false
+          end
         end
 
         # /database_id/document_id/_id.js
@@ -194,7 +199,10 @@ describe "Quilt" do
           it "can_delete? should return false" do
             @quilt.can_delete?("/#{@database_id}/document_id/name.js").should be_true
           end
-          it "delete should update document"
+          it "delete should update document" do
+            @quilt.delete("/#{@database_id}/document_id/name.js").should be_true
+            @quilt.file?("/#{@database_id}/document_id/name.js").should be_false
+          end
         end
 
         # /database_id/document_id/object
@@ -252,7 +260,10 @@ describe "Quilt" do
           it "can_rmdir? should return true when empty" do
             @quilt.can_rmdir?("/#{@database_id}/document_id/empty").should be_true
           end
-          it "rmdir should remove empty from document tree when empty"
+          it "rmdir should remove empty from document tree when empty" do
+            @quilt.rmdir("/#{@database_id}/document_id/empty").should be_true
+            @quilt.directory?("/#{@database_id}/document_id/empty").should be_false
+          end
         end
       end
       
@@ -342,7 +353,10 @@ describe "Quilt" do
             it "can_delete? should return true" do
               @quilt.can_delete?("/#{@database_id}/_design/design_document_id/name.js").should be_true
             end
-            it "delete should update design document"
+            it "delete should update design document" do
+              @quilt.delete("/#{@database_id}/_design/design_document_id/name.js").should be_true
+              @quilt.file?("/#{@database_id}/_design/design_document_id/name.js").should be_false
+            end
           end
           
           # /database_id/_design/design_document_id/_list
