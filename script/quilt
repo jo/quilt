@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+# Quilt fuse runner
+# usage:
+# ruby script/quilt http://localhost:5984
+
+QUILT_ROOT = File.expand_path(File.join(File.dirname(__FILE__), ".."))
+
+require File.join(QUILT_ROOT, "lib/quilt")
+
+# specify the database server url here
+db = ARGV.first || "http://127.0.0.1:5984"
+
+# couch fs will be mounted here
+# eg: app/127.0.0.1:5984
+mount_dir = File.join(QUILT_ROOT, 'app', File.basename(db))
+
+# create mount dir unless exists
+Dir.mkdir(mount_dir) unless File.directory?(mount_dir)
+
+# init couch dir
+couchdir = Quilt.new(db)
+
+FuseFS.set_root(couchdir)
+FuseFS.mount_under mount_dir
+
+trap("INT") do
+  puts "ancelling..."
+  FuseFS.unmount
+  FuseFS.exit
+  puts "Bye."
+end
+
+puts "Quilt maps #{db} to #{mount_dir}"
+FuseFS.run
