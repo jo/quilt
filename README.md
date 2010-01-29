@@ -23,7 +23,7 @@ Getting started
 
 inside the Quilt directory run
 
-    script/fs
+    script/quilt
 
 
 Your Application code will now be available at ./app/<CouchDB server url>.
