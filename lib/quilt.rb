@@ -8,7 +8,7 @@ class Quilt < FuseFS::FuseDir
   attr_reader :server_name, :db
 
   # initializes Quilt with the database server name
-  def initialize(server_name = "http://127.0.0.1:5984")
+  def initialize(server_name)
     @server_name = server_name
     @db = QuiltDB.new(server_name)
   end

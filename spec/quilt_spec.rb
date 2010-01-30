@@ -6,7 +6,7 @@ require 'couchrest'
 
 describe "Quilt" do
   before do
-    @quilt = Quilt.new 
+    @quilt = Quilt.new("http://127.0.0.1:5984")
     @database_id = "quilt-test-db"
     @new_database_id = "quilt-test-new-db"
     @server_name = @quilt.server_name
