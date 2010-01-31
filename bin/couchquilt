@@ -14,15 +14,21 @@
 #    limitations under the License.
 #
 # usage:
-#  quilt http://localhost:5984 ~/quilt
+#  couchquilt ~/quilt http://localhost:5984
 
 QUILT_ROOT = File.expand_path(File.join(File.dirname(__FILE__), ".."))
 require File.join(QUILT_ROOT, "lib/couchquilt")
 
+if ARGV[0].nil?
+  puts "usage:"
+  puts "couchquilt <mountpoint> <server>"
+  exit
+end
+
 # database server url defaults to http://127.0.0.1:5984
 # couch fs will be mounted on ./app/127.0.0.1:5984 per default
-server     = ARGV[0] || "http://127.0.0.1:5984"
-mountpoint = ARGV[1] || File.join(QUILT_ROOT, 'app', File.basename(server))
+mountpoint = ARGV[0]
+server     = ARGV[1] || "http://127.0.0.1:5984"
 
 # create mount point if needed
 Dir.mkdir(mountpoint) unless File.directory?(mountpoint)

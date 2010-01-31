@@ -21,7 +21,7 @@ Getting started
 
 start quilt by typing
 
-    couchquilt <server url> <mount point>
+    couchquilt <mountpoint> <server>
 
 
 Your mapped CouchDB will now be available at <mount point>.
