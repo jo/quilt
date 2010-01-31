@@ -18,6 +18,6 @@ end
 
 desc "Display Quilt version"
 task :version do
-  require "lib/quilt"
-  puts Quilt::VERSION
+  require "lib/couchquilt"
+  puts Couchquilt::VERSION
 end
