@@ -8,8 +8,6 @@ Install dependencies
 --------------------
 
     apt-get install ruby rubygems libfusefs-ruby
-    apt-get install couchdb
-    gem install couchrest
 
 
 Install Quilt
