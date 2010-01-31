@@ -48,7 +48,7 @@
         <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
     </div>
       
-    <h1><a href="http://github.com/jo/quilt">Quilt</a> 
+    <h1><a href="http://github.com/jo/quilt">Quilt / Couchquilt</a> 
       <span class="small">by <a href="http://github.com/jo">TF</a></span></h1>
 
     <div class="description">
@@ -58,16 +58,17 @@
     <img src="screenshot.png" alt="Screenshot of design document in Futon"/>
 
     <h2>Get your Quilt</h2>
-    <p>By now Quilt is in active development and alpha or pre-alpha software or whatever you say.<br />
-    That means among others Quilt has no installation support with common package managers like gems or debs.</p>
     <h4>Dependencies</h4>
-    <pre>apt-get install ruby rubygems libfusefs-ruby
-apt-get install couchdb
-gem install couchrest</pre>
-    <p>Today the only and by the way very simple way is to install Quilt from source:</p>
+    <pre>apt-get install ruby rubygems libfusefs-ruby</pre>
     <h4>Installation</h4>
+    <p>The preferred way to install Quilt is with Rubygems via Gemcutter:</p>
     <p>
-      You can download Quilt in either
+      <pre>gem sources -a http://gemcutter.org/</pre>
+      if you havent done that yet.
+    </p>
+    <pre>gem install couch-quilt</pre>
+    <p>
+      Or you can download Quilt in either
       <a href="http://github.com/jo/quilt/zipball/master">zip</a> or
       <a href="http://github.com/jo/quilt/tarball/master">tar</a> formats.
     </p>
@@ -76,16 +77,14 @@ gem install couchrest</pre>
       <pre>$ git clone git://github.com/jo/quilt</pre>
     </p>
     <p>Das wars!</p>
-    <h2>Set out your Quilt</h2>
-    <p>Change to your quilt installation directory (eg <code>~/quilt</code>) and type the following few words:</p>
-    <pre>script/quilt</pre>
-    <p>You can also specify another CouchDB server:</p>
-    <pre>script/quilt http://couch.example.com</pre>
 
-    <h2>Sit down on your Couch</h2>
-    
-    <p>Your CouchDB databases will be mapped to your filesystem at</p>
-    <pre>~/quilt/app/&lt;ServerName&gt;/</pre>
+    <h2>Set out your Quilt</h2>
+    <p>Just type the following few words:</p>
+    <pre>couchquilt http://127.0.0.1:5984 couch_dir</pre>
+    <p>Now the databases on <code>http://127.0.0.1:5984</code> are mapped to the (newly created) directory <code>./couch_dir</code>.</p>
+
+    <h2>Sit down on your Couch</h2> 
+    <p>Inspect your filesystem at <code>./couch_dir</code> and...</p>
     <p>Relax!</p>
 
     <p><strong>Tip:</strong> <code>touch _delete</code> will delete a database or document.</p>
@@ -98,7 +97,7 @@ gem install couchrest</pre>
     Application Assets, as Images and CSS files, are stored inside design documents as attachements, too.</p>
     
     <p>Quilt maps CouchDB documents to a filesystem, provided by FuseFS.
-    Quilt is currently using Ruby to create a Fuse Filesystem. The Filesystem is mounted to the <code>app/</code> directory.</p>
+    Quilt is currently using Ruby to create a Fuse Filesystem.</p>
     
     <p>The CouchDB documents are mapped to a directory structure in the following way:</p>
     
@@ -107,10 +106,11 @@ gem install couchrest</pre>
       <li>each <strong>Document</strong> is a directory named after the id of the document. Design documents are stored in a subfolder called <code>_design</code></li>
       <li>a <strong>Key</strong> in the hash of the document is a directory inside the documents folder</li>
       <li>the <strong>Value</strong> of the hash lives inside the key folder</li>
-      <li><strong>Strings</strong> are plain files with the extension <code>.js</code></li>
-      <li><strong>Floats</strong> are plain files with the extension <code>.f.js</code></li>
+      <li><strong>Strings</strong> are plain text files with the extension <code>.js</code></li>
+      <li><strong>Booleans</strong> are plain text files with the extension <code>.b.js</code></li>
+      <li><strong>Floats</strong> are plain text files with the extension <code>.f.js</code></li>
     
-    <li><strong>Integers</strong> are plain files with the extension <code>.i.js</code></li>
+    <li><strong>Integers</strong> are plain text files with the extension <code>.i.js</code></li>
     <li><strong>Arrays</strong> are directories where <em>all</em> elements are numbered, like <code>000</code>, <code>001</code> and <code>002.js</code></li>
     </ol>
     
@@ -161,10 +161,10 @@ gem install couchrest</pre>
     <p>Some resources you might consider as a starting point:</p>
     
     <ul>
-      <li><a href="http://couchdb.apache.org/">CouchDB Project Page</a></li>
       <li><a href="http://rubyforge.org/projects/fusefs/">Ruby FuseFS RubyForge Project Page</a></li>
-    
+      <li><a href="http://couchdb.apache.org/">CouchDB Project Page</a></li>
       <li><a href="http://books.couchdb.org/relax/">CouchDB: The Definitive Guide</a></li>
+      <li><a href="http://wiki.apache.org/couchdb/HTTP_REST_API">Primary API for accessing the CouchDB store</a></li>
     </ul>
 
 
