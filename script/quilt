@@ -14,28 +14,24 @@
 #    limitations under the License.
 #
 # usage:
-# ruby script/quilt http://localhost:5984
+#  quilt http://localhost:5984 ~/quilt
 
 QUILT_ROOT = File.expand_path(File.join(File.dirname(__FILE__), ".."))
-
 require File.join(QUILT_ROOT, "lib/quilt")
 
-# specify the database server url here
-db = ARGV.first || "http://127.0.0.1:5984"
+# database server url defaults to http://127.0.0.1:5984
+# couch fs will be mounted on ./app/127.0.0.1:5984 per default
+server     = ARGV[0] || "http://127.0.0.1:5984"
+mountpoint = ARGV[1] || File.join(QUILT_ROOT, 'app', File.basename(server))
 
-# couch fs will be mounted here
-# eg: app/127.0.0.1:5984
-mount_dir = File.join(QUILT_ROOT, 'app', File.basename(db))
+# create mount point if needed
+Dir.mkdir(mountpoint) unless File.directory?(mountpoint)
 
-# create mount dir unless exists
-Dir.mkdir(mount_dir) unless File.directory?(mount_dir)
+# init quilt fs
+FuseFS.set_root Quilt::QuiltFS.new(server)
+FuseFS.mount_under mountpoint
 
-# init couch dir
-couchdir = Quilt.new(db)
-
-FuseFS.set_root(couchdir)
-FuseFS.mount_under mount_dir
-
+# listen for exit signals and unmount fuse
 trap("INT") do
   puts "ancelling..."
   FuseFS.unmount
@@ -43,5 +39,6 @@ trap("INT") do
   puts "Bye."
 end
 
-puts "Quilt maps #{db} to #{mount_dir}"
+# actually do the Fuse mount
+puts "Quilt maps #{server} to #{mountpoint}"
 FuseFS.run

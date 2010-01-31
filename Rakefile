@@ -15,3 +15,9 @@ Spec::Rake::SpecTask.new(:coverage) do |t|
   t.rcov = true
   t.rcov_opts = ['--exclude', '/var/lib/gems', '--exclude', "spec"]
 end
+
+desc "Display Quilt version"
+task :version do
+  require "lib/quilt"
+  puts Quilt::VERSION
+end
