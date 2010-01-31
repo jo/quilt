@@ -35,7 +35,7 @@ describe "Quilt" do
     }
     RestClient.put File.join(SERVER_NAME, TESTDB, @design_document["_id"]), @design_document.to_json
 
-    @quilt = Quilt::DebuggedFS.new("http://127.0.0.1:5984")
+    @quilt = Couchquilt::DebuggedFS.new("http://127.0.0.1:5984")
   end
 
   after :all do

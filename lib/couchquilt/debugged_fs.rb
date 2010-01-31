@@ -1,9 +1,9 @@
-module Quilt
+module Couchquilt
   # proxy sends all requests to QuiltFS
   # used for printing debug information
   class DebuggedFS
     def initialize(server_name)
-      @quilt = QuiltFS.new(server_name)
+      @quilt = FS.new(server_name)
     end
 
     private

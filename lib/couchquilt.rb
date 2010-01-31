@@ -28,11 +28,11 @@ $:.unshift File.dirname(__FILE__) unless
   $:.include?(File.dirname(__FILE__)) ||
     $:.include?(File.expand_path(File.dirname(__FILE__)))
 
-require 'quilt/couch_client'
-require 'quilt/fs'
+require 'couchquilt/couch_client'
+require 'couchquilt/fs'
 
 
 # Set out your Quilt
-module Quilt
+module Couchquilt
   VERSION = '0.2.1' unless self.const_defined?("VERSION")
 end

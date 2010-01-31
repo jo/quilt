@@ -17,7 +17,7 @@
 #  quilt http://localhost:5984 ~/quilt
 
 QUILT_ROOT = File.expand_path(File.join(File.dirname(__FILE__), ".."))
-require File.join(QUILT_ROOT, "lib/quilt")
+require File.join(QUILT_ROOT, "lib/couchquilt")
 
 # database server url defaults to http://127.0.0.1:5984
 # couch fs will be mounted on ./app/127.0.0.1:5984 per default
@@ -28,7 +28,7 @@ mountpoint = ARGV[1] || File.join(QUILT_ROOT, 'app', File.basename(server))
 Dir.mkdir(mountpoint) unless File.directory?(mountpoint)
 
 # init quilt fs
-FuseFS.set_root Quilt::QuiltFS.new(server)
+FuseFS.set_root Couchquilt::FS.new(server)
 FuseFS.mount_under mountpoint
 
 # listen for exit signals and unmount fuse

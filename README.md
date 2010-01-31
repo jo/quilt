@@ -13,18 +13,18 @@ Install dependencies
 Install Quilt
 -------------
 
-    git clone git://github.com/jo/quilt.git
+    gem install couch-quilt
 
 
 Getting started
 ---------------
 
-inside the Quilt directory run
+start quilt by typing
 
-    script/quilt
+    couchquilt <server url> <mount point>
 
 
-Your Application code will now be available at ./app/<CouchDB server url>.
+Your mapped CouchDB will now be available at <mount point>.
 
 You can create databases and documents with mkdir, add properties via echo >> and so on.
 Databases and documents can be deleted via a touch /database_id/_delete or /database_id/document_id/_delete.

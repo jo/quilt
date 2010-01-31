@@ -1,5 +1,5 @@
 # speaking to CouchDB server
-module Quilt
+module Couchquilt
   class CouchClient
     def initialize(server_name)
       @server_name = server_name

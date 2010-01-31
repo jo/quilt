@@ -1,8 +1,8 @@
 require 'cgi'
 require 'uri'
 
-module Quilt
-  class QuiltFS
+module Couchquilt
+  class FS
     # initializes Quilt FS with the database server name
     def initialize(server_name)
       @couch = CouchClient.new(server_name)
