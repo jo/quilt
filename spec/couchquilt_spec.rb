@@ -52,6 +52,9 @@ describe "Quilt" do
     it "contents should list databases" do
       @quilt.contents("/").should include(TESTDB)
     end
+    it "contents should include _uuids" do
+      @quilt.contents("/").should include("_uuids")
+    end
     it "can_mkdir? should return false" do
       @quilt.can_mkdir?("/").should be_false
     end
@@ -684,6 +687,42 @@ describe "Quilt" do
               end
             end
           end
+        end
+      end
+    end
+
+    # /_uuids
+    describe "_uuids/" do
+      it "directory? should return true" do
+        @quilt.directory?("/_uuids").should be_true
+      end
+      it "file? should return false" do
+        @quilt.file?("/_uuids").should be_false
+      end
+      it "can_mkdir? should return false" do
+        @quilt.can_mkdir?("/_uuids").should be_false
+      end
+      it "can_rmdir? should return false" do
+        @quilt.can_rmdir?("/_uuids").should be_false
+      end
+      it "contents should include 0i.js" do
+        @quilt.contents("/_uuids").should == ["0i.js"]
+      end
+      describe "0i.js" do
+        it "directory? should return false" do
+          @quilt.directory?("/_uuids/0i.js").should be_false
+        end
+        it "file? should return true" do
+          @quilt.file?("/_uuids/0i.js").should be_true
+        end
+        it "can_delete? should return false" do
+          @quilt.can_delete?("/_uuids/0i.js").should be_false
+        end
+        it "can_write? should return false" do
+          @quilt.can_write?("/_uuids/0i.js").should be_false
+        end
+        it "read_file should return contents" do
+          @quilt.read_file("/_uuids/0i.js").should =~ /\A[a-z0-9]{32}\z/
         end
       end
     end

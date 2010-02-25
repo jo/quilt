@@ -14,7 +14,9 @@ module Couchquilt
   
       list case named_path(path)
            when :root
-             @couch.get("_all_dbs")
+             ["_uuids"] + @couch.get("_all_dbs")
+           when :uuids
+             ["0i.js"]
            when :database
              ["_design"] +
                # database meta data
@@ -59,7 +61,7 @@ module Couchquilt
         doc = get_view_result_part(database, id, parts)
         # arrays and hashes are mapped into directories
         doc.is_a?(Hash) || doc.is_a?(Array)
-      when :database_info, :show_function_result, :list_function_result
+      when :database_info, :show_function_result, :list_function_result, :uuid
         false
       when nil
         # look into document
@@ -78,7 +80,7 @@ module Couchquilt
       database, id, *parts = extract_parts(path)
   
       case named_path(path)
-      when :database_info, :show_function_result, :list_function_result
+      when :database_info, :show_function_result, :list_function_result, :uuid
         true
       when :view_function_result
         # Every javascript or HTML is file, based on extension
@@ -108,6 +110,8 @@ module Couchquilt
                 @couch.get(remove_extname(File.join(database, id, "_list", *parts)))
               when :view_function_result
                 get_view_result_part(database, id, parts)
+              when :uuid
+                get_document_part(database, id, ["uuids"])
               else
                 get_document_part(database, id, parts)
               end
@@ -121,7 +125,7 @@ module Couchquilt
       case named_path(path)
       when :switch_delete_database, :switch_delete_document
         true
-      when :database_info, :show_function_result, :list_function_result, :view_function_result
+      when :database_info, :show_function_result, :list_function_result, :view_function_result, :uuid
         false
       else
         File.basename(path) !~ /\A_/ && File.extname(path) == ".js"
@@ -144,7 +148,7 @@ module Couchquilt
       return false if File.basename(path) =~ /\A_/
   
       case named_path(path)
-      when :database_info, :show_function_result, :list_function_result, :view_function_result
+      when :database_info, :show_function_result, :list_function_result, :view_function_result, :uuid
         false
       else
         true
@@ -255,6 +259,10 @@ module Couchquilt
       if database.nil?
         # /
         :root
+      elsif database == "_uuids" && id.nil?
+        :uuids
+      elsif database == "_uuids"
+        :uuid
       elsif id == "_delete"
         :switch_delete_database
       elsif parts.size == 1 && parts.first == "_delete"
