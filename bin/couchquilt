@@ -19,9 +19,12 @@
 QUILT_ROOT = File.expand_path(File.join(File.dirname(__FILE__), ".."))
 require File.join(QUILT_ROOT, "lib/couchquilt")
 
+DEBUG = ARGV.delete("--debug")
+require File.join(File.dirname(__FILE__), '../lib/couchquilt/debugged_fs') if DEBUG
+
 if ARGV[0].nil?
   puts "usage:"
-  puts "couchquilt <mountpoint> <server>"
+  puts "couchquilt mountpoint [server] [--debug]"
   exit
 end
 
@@ -34,7 +37,8 @@ server     = ARGV[1] || "http://127.0.0.1:5984"
 Dir.mkdir(mountpoint) unless File.directory?(mountpoint)
 
 # init quilt fs
-FuseFS.set_root Couchquilt::FS.new(server)
+quilt_fs_class = DEBUG ? Couchquilt::DebuggedFS : Couchquilt::FS
+FuseFS.set_root quilt_fs_class.new(server)
 FuseFS.mount_under mountpoint
 
 # listen for exit signals and unmount fuse
@@ -47,4 +51,5 @@ end
 
 # actually do the Fuse mount
 puts "Quilt maps #{server} to #{mountpoint}"
+puts "Debug mode" if DEBUG
 FuseFS.run

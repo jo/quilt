@@ -4,15 +4,18 @@ module Couchquilt
   class DebuggedFS
     def initialize(server_name)
       @quilt = FS.new(server_name)
+    rescue => e
+      STDERR.puts e.message, e.backtrace
     end
 
-    private
-
-    # delegates all method calls to the QuiltFS
-    def method_missing(name, *path_and_payload)
-      @quilt.send name, *path_and_payload
-    rescue => e
-      STDERR.puts name, path_and_payload, e.class, e.message, e.backtrace
+    (FS.public_instance_methods - public_instance_methods).each do |method|
+      class_eval <<-STR
+        def #{method}(*args)
+          @quilt.#{method}(*args)
+        rescue => e
+          STDOUT.puts "#{method}", args.inspect, e.class, e.message, e.backtrace
+        end
+      STR
     end
   end
 end
