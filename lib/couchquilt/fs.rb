@@ -16,12 +16,13 @@ module Couchquilt
            when :root
              @couch.get("_all_dbs")
            when :database
-             query = URI.encode('startkey="_design0"')
              ["_design"] +
                # database meta data
                map_json(@couch.get(database)) +
                # all documents but design documents
-               @couch.get("#{database}/_all_docs?#{query}")["rows"].map { |r| r["id"] }
+               # Note: we can not use ?startkey="_design/"&endkey="_design0" here,
+               # because that would return no results for databases without design documents
+               @couch.get("#{database}/_all_docs")["rows"].map { |r| r["id"] }.select { |id| id !~ /^_design\// }
            when :_design
              query = URI.encode('startkey="_design"&endkey="_design0"')
              # all design documents
