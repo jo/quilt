@@ -385,7 +385,7 @@ module Couchquilt
     # Appends extname, that is: builds a filename from key and value.
     # Note: values are casted by extension.
     def append_extname(key, value)
-      basename = key.is_a?(Integer) ? "%.3d" % key : key
+      basename = key.is_a?(Integer) ? "%di" % key : key
   
       case value
       when Float
