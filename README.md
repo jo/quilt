@@ -21,10 +21,10 @@ Getting started
 
 start quilt by typing
 
-    couchquilt <mountpoint> <server>
+    couchquilt mountpoint [server] [--debug]
 
 
-Your mapped CouchDB will now be available at <mount point>.
+Your mapped CouchDB will now be available at *mountpoint*.
 
 You can create databases and documents with mkdir, add properties via echo >> and so on.
 Databases and documents can be deleted via a touch /database_id/_delete or /database_id/document_id/_delete.
