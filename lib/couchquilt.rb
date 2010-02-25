@@ -34,5 +34,4 @@ require 'couchquilt/fs'
 
 # Set out your Quilt
 module Couchquilt
-  VERSION = '0.2.1' unless self.const_defined?("VERSION")
 end
