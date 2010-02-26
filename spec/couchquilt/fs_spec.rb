@@ -171,7 +171,7 @@ describe Couchquilt::FS do
           @quilt.file?("/#{TESTDB}/document_id").should be_false
         end
         it "contents should list documents content" do
-          @quilt.contents("/#{TESTDB}/document_id").should == ["_id.js", "_rev.js", "array", "boolean.b.js", "empty", "float.f.js", "integer.i.js", "name.js", "object"]
+          @quilt.contents("/#{TESTDB}/document_id").should == ["_id.js", "_rev.js", "array.array", "boolean.b.js", "empty", "float.f.js", "integer.i.js", "name.js", "object"]
         end
         it "can_mkdir? should return false" do
           @quilt.can_mkdir?("/#{TESTDB}/document_id").should be_false
@@ -265,7 +265,7 @@ describe Couchquilt::FS do
           it "write_to should update document" do
             @quilt.write_to("/#{TESTDB}/document_id/boolean.b.js", "value").should be_true
           end
-          it "can_delete? should return false" do
+          it "can_delete? should return true" do
             @quilt.can_delete?("/#{TESTDB}/document_id/boolean.b.js").should be_true
           end
           it "delete should update document" do
@@ -295,21 +295,45 @@ describe Couchquilt::FS do
         end
         
         # /database_id/document_id/array
-        describe "array/" do
+        describe "array.array/" do
           it "directory? should return true" do
-            @quilt.directory?("/#{TESTDB}/document_id/array").should be_true
+            @quilt.directory?("/#{TESTDB}/document_id/array.array").should be_true
           end
           it "file? should return false" do
-            @quilt.file?("/#{TESTDB}/document_id/array").should be_false
+            @quilt.file?("/#{TESTDB}/document_id/array.array").should be_false
           end
           it "contents should list array content" do
-            @quilt.contents("/#{TESTDB}/document_id/array").should == ["0i.js"]
+            @quilt.contents("/#{TESTDB}/document_id/array.array").should == ["0i.js"]
           end
           it "can_mkdir? should return false" do
-            @quilt.can_mkdir?("/#{TESTDB}/document_id/array").should be_false
+            @quilt.can_mkdir?("/#{TESTDB}/document_id/array.array").should be_false
           end
           it "can_rmdir? should return false when not empty" do
-            @quilt.can_rmdir?("/#{TESTDB}/document_id/array").should be_false
+            @quilt.can_rmdir?("/#{TESTDB}/document_id/array.array").should be_false
+          end
+          describe "0i.js" do
+            it "directory? should return false" do
+              @quilt.directory?("/#{TESTDB}/document_id/array.array/0i.js").should be_false
+            end
+            it "file? should return true" do
+              @quilt.file?("/#{TESTDB}/document_id/array.array/0i.js").should be_true
+            end
+            it "read_file should return contents" do
+              @quilt.read_file("/#{TESTDB}/document_id/array.array/0i.js").should == @document["array"].first
+            end
+            it "can_write? should return true" do
+              @quilt.can_write?("/#{TESTDB}/document_id/array.array/0i.js").should be_true
+            end
+            it "write_to should update document" do
+              @quilt.write_to("/#{TESTDB}/document_id/array.array/0i.js", "value").should be_true
+            end
+            it "can_delete? should return true" do
+              @quilt.can_delete?("/#{TESTDB}/document_id/array.array/0i.js").should be_true
+            end
+            it "delete should update document" do
+              @quilt.delete("/#{TESTDB}/document_id/array.array/0i.js").should be_true
+              @quilt.file?("/#{TESTDB}/document_id/array.array/0i.js").should be_false
+            end
           end
         end
         
@@ -570,7 +594,7 @@ describe Couchquilt::FS do
                 @quilt.file?("/#{TESTDB}/_design/design_document_id/_view/view_function_name").should be_false
               end
               it "contents should list view result document contents" do
-                @quilt.contents("/#{TESTDB}/_design/design_document_id/_view/view_function_name").should == ["offset.i.js", "rows", "total_rows.i.js"]
+                @quilt.contents("/#{TESTDB}/_design/design_document_id/_view/view_function_name").should == ["offset.i.js", "rows.array", "total_rows.i.js"]
               end
               it "can_mkdir? should return false" do
                 @quilt.can_mkdir?("/#{TESTDB}/_design/design_document_id/_view/view_function_name").should be_false
@@ -600,87 +624,87 @@ describe Couchquilt::FS do
                   @quilt.can_delete?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/total_rows.i.js").should be_false
                 end
               end
-              describe "rows/" do
+              describe "rows.array/" do
                 it "directory? should return true" do
-                  @quilt.directory?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows").should be_true
+                  @quilt.directory?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array").should be_true
                 end
                 it "file? should return false" do
-                  @quilt.file?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows").should be_false
+                  @quilt.file?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array").should be_false
                 end
                 it "contents should list view rows" do
-                  @quilt.contents("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows").should == ["0i"]
+                  @quilt.contents("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array").should == ["0i"]
                 end
                 it "can_mkdir? should return false" do
-                  @quilt.can_mkdir?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows").should be_false
+                  @quilt.can_mkdir?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array").should be_false
                 end
                 it "can_rmdir? should return false" do
-                  @quilt.can_rmdir?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows").should be_false
+                  @quilt.can_rmdir?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array").should be_false
                 end
                 describe "0i/" do
                   it "directory? should return true" do
-                    @quilt.directory?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i").should be_true
+                    @quilt.directory?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i").should be_true
                   end
                   it "file? should return false" do
-                    @quilt.file?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i").should be_false
+                    @quilt.file?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i").should be_false
                   end
                   it "contents should list view result row content" do
-                    @quilt.contents("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i").should == ["id.js", "key.js", "value.js"]
+                    @quilt.contents("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i").should == ["id.js", "key.js", "value.js"]
                   end
                   it "can_mkdir? should return false" do
-                    @quilt.can_mkdir?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i").should be_false
+                    @quilt.can_mkdir?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i").should be_false
                   end
                   it "can_rmdir? should return false" do
-                    @quilt.can_rmdir?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i").should be_false
+                    @quilt.can_rmdir?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i").should be_false
                   end
                   describe "id.js" do
                     it "directory? should return false" do
-                      @quilt.directory?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/id.js").should be_false
+                      @quilt.directory?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/id.js").should be_false
                     end
                     it "file? should return true" do
-                      @quilt.file?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/id.js").should be_true
+                      @quilt.file?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/id.js").should be_true
                     end
                     it "read_file should return contents" do
-                      @quilt.read_file("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/id.js").should == "document_id"
+                      @quilt.read_file("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/id.js").should == "document_id"
                     end
                     it "can_write? should return false" do
-                      @quilt.can_write?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/id.js").should be_false
+                      @quilt.can_write?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/id.js").should be_false
                     end
                     it "can_delete? should return false" do
-                      @quilt.can_delete?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/id.js").should be_false
+                      @quilt.can_delete?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/id.js").should be_false
                     end
                   end
                   describe "key.js" do
                     it "directory? should return false" do
-                      @quilt.directory?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/key.js").should be_false
+                      @quilt.directory?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/key.js").should be_false
                     end
                     it "file? should return true" do
-                      @quilt.file?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/key.js").should be_true
+                      @quilt.file?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/key.js").should be_true
                     end
                     it "read_file should return contents" do
-                      @quilt.read_file("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/key.js").should == "This is a name"
+                      @quilt.read_file("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/key.js").should == "This is a name"
                     end
                     it "can_write? should return false" do
-                      @quilt.can_write?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/key.js").should be_false
+                      @quilt.can_write?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/key.js").should be_false
                     end
                     it "can_delete? should return false" do
-                      @quilt.can_delete?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/key.js").should be_false
+                      @quilt.can_delete?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/key.js").should be_false
                     end
                   end
                   describe "value.js" do
                     it "directory? should return false" do
-                      @quilt.directory?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/value.js").should be_false
+                      @quilt.directory?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/value.js").should be_false
                     end
                     it "file? should return true" do
-                      @quilt.file?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/value.js").should be_true
+                      @quilt.file?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/value.js").should be_true
                     end
                     it "read_file should return contents" do
-                      @quilt.read_file("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/value.js").should == ""
+                      @quilt.read_file("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/value.js").should == ""
                     end
                     it "can_write? should return false" do
-                      @quilt.can_write?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/value.js").should be_false
+                      @quilt.can_write?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/value.js").should be_false
                     end
                     it "can_delete? should return false" do
-                      @quilt.can_delete?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/value.js").should be_false
+                      @quilt.can_delete?("/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/value.js").should be_false
                     end
                   end
                 end

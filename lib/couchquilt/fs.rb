@@ -103,13 +103,13 @@ module Couchquilt
   
       content case named_path(path)
               when :database_info
-                @couch.get(database)[remove_extname(id)]
+                @couch.get(database)[key_for(id)]
               when :show_function_result
                 parts.shift
-                @couch.get(remove_extname(File.join(database, id, "_show", *parts)))
+                @couch.get(key_for(File.join(database, id, "_show", *parts)))
               when :list_function_result
                 parts.shift
-                @couch.get(remove_extname(File.join(database, id, "_list", *parts)))
+                @couch.get(key_for(File.join(database, id, "_list", *parts)))
               when :view_function_result
                 get_view_result_part(database, id, parts)
               when :uuid
@@ -136,11 +136,12 @@ module Couchquilt
   
     # writes content str to path
     def write_to(path, str)
+      str.strip!
       database, id, *parts = extract_parts(path)
       # fetch document
       doc = @couch.get("#{database}/#{id}")
       # update the value that the file at path holds
-      update_value(doc, parts, str)
+      map_fs(doc, parts, str)
       # save document
       @couch.put("#{database}/#{id}", doc)
     end
@@ -165,7 +166,7 @@ module Couchquilt
       # fetch document
       doc = @couch.get("#{database}/#{id}")
       # remove object
-      remove_object(doc, parts)
+      map_fs(doc, parts, nil)
       # save document
       @couch.put("#{database}/#{id}", doc)
     end
@@ -199,7 +200,7 @@ module Couchquilt
         # fetch document
         doc = @couch.get("#{database}/#{id}")
         # insert empty object
-        update_value(doc, parts, {})
+        map_fs(doc, parts)
         # save document
         @couch.put("#{database}/#{id}", doc)
       end
@@ -225,7 +226,7 @@ module Couchquilt
       # fetch document
       doc = @couch.get("#{database}/#{id}")
       # remove object
-      update_value(doc, parts, nil)
+      map_fs(doc, parts, nil)
       # save document
       @couch.put("#{database}/#{id}", doc)
     end
@@ -321,6 +322,7 @@ module Couchquilt
     # fetch part of document
     def get_document_part(database, id, parts = [])
       doc = @couch.get("#{database}/#{id}")
+      parts.map! { |p| key_for p }
       get_part(doc, parts)
     end
   
@@ -329,55 +331,19 @@ module Couchquilt
       a, view_function_name, *rest = parts
       view = [id.sub("_design/", ""), "_view", view_function_name].join("/")
       doc = @couch.get("#{database}/_design/#{view}")
+      rest.map! { |p| key_for p }
       get_part(doc, rest)
     end
   
     # get a part of the document
     # eg: get_part({ :a => { :b => :c}}, [:a, :b]) #=> :c
-    # also removes the file extension and gets index of arrays
-    def get_part(doc, parts)
+    def get_part(doc, keys = [])
       return if doc.nil?
       doc = doc.dup
-      parts.each do |part|
-        case doc
-        when Hash
-          doc = doc[remove_extname(part)]
-        when Array
-          doc = doc[part.to_i]
-        end
+      keys.each do |key|
+        doc = doc[key]
       end
       doc
-    end
-  
-    # updates a part of a hash
-    # Example:
-    #  update_value({:a => { :b => 'c'}}, [:a, :b], 'cis') #=> {:a => { :b => 'cis'}}
-    def update_value(hash, keys, value)
-      key = remove_extname(keys.shift)
-      if keys.empty?
-        hash[key] = value
-      else
-        hash[key] = update_value(hash[key], keys, value)
-      end
-      hash
-    end
-  
-    # removes an object from a hash
-    # Example:
-    #  remove_object({:a => { :b => 'c'}}, [:a, :b]) #=> {:a => { }}
-    def remove_object(hash, keys)
-      key = remove_extname(keys.shift)
-      if keys.empty?
-        hash.delete(key)
-      else
-        hash[key] = remove_object(hash[key], keys)
-      end
-      hash
-    end
-  
-    # remove extname to get the id
-    def remove_extname(filename)
-      filename.sub(/((\.(f|i|b))?\.js|\.html)\z/, "")
     end
   
     # escapes the value for using as filename
