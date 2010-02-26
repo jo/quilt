@@ -3,6 +3,8 @@ require 'uri'
 
 module Couchquilt
   class FS
+    include Mapper
+
     # initializes Quilt FS with the database server name
     def initialize(server_name)
       @couch = CouchClient.new(server_name)
@@ -316,18 +318,6 @@ module Couchquilt
       end
     end
   
-    # maps json contents into contents array
-    def map_json(doc)
-      case doc
-      when Hash
-        # Hash is mapped to directory
-        doc.keys.sort.map { |k| append_extname(k, doc[k]) }
-      when Array
-        # Array is mapped to directory
-        doc.map { |k| append_extname(doc.index(k), k) }
-      end
-    end
-  
     # fetch part of document
     def get_document_part(database, id, parts = [])
       doc = @couch.get("#{database}/#{id}")
@@ -390,25 +380,6 @@ module Couchquilt
       filename.sub(/((\.(f|i|b))?\.js|\.html)\z/, "")
     end
   
-    # Appends extname, that is: builds a filename from key and value.
-    # Note: values are casted by extension.
-    def append_extname(key, value)
-      basename = key.is_a?(Integer) ? "%di" % key : key
-  
-      case value
-      when Float
-        "#{basename}.f.js"
-      when Integer
-        "#{basename}.i.js"
-      when nil, String
-        "#{basename}.js"
-      when true, false
-        "#{basename}.b.js"
-      else
-        basename
-      end
-    end
-
     # escapes the value for using as filename
     def list(array)
       return [] if array.nil?

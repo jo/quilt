@@ -1,7 +1,7 @@
-require File.join(File.dirname(__FILE__), 'spec_helper.rb')
+require File.join(File.dirname(__FILE__), '../spec_helper.rb')
 
 # Note: databases, documents and keys with slashes are not supported by now
-describe "Quilt" do
+describe Couchquilt::FS do
   before :all do
     RestClient.put(File.join(SERVER_NAME, TESTDB), nil)
 
