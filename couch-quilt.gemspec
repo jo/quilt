@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{couch-quilt}
-  s.version = "0.2.3"
+  s.version = "0.3.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Johannes J\303\266rg Schmidt"]
-  s.date = %q{2010-02-25}
+  s.date = %q{2010-02-26}
   s.default_executable = %q{couchquilt}
   s.description = %q{Access CouchDB JSON documents from filesystem.}
   s.email = %q{schmidt@netzmerk.com}
@@ -28,8 +28,10 @@ Gem::Specification.new do |s|
      "lib/couchquilt/couch_client.rb",
      "lib/couchquilt/debugged_fs.rb",
      "lib/couchquilt/fs.rb",
+     "lib/couchquilt/mapper.rb",
      "lib/couchquilt/version.rb",
-     "spec/couchquilt_spec.rb",
+     "spec/couchquilt/fs_spec.rb",
+     "spec/couchquilt/mapper_spec.rb",
      "spec/spec_helper.rb"
   ]
   s.homepage = %q{http://jo.github.com/quilt}
@@ -39,8 +41,9 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.5}
   s.summary = %q{Access CouchDB from filesystem.}
   s.test_files = [
-    "spec/couchquilt_spec.rb",
-     "spec/spec_helper.rb"
+    "spec/spec_helper.rb",
+     "spec/couchquilt/fs_spec.rb",
+     "spec/couchquilt/mapper_spec.rb"
   ]
 
   if s.respond_to? :specification_version then
