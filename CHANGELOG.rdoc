@@ -1,0 +1,19 @@
+== 0.3.0
+
+* fixed and changed array mapping
+* rolled out json mapping to module
+
+== 0.2.3
+
+* support _uuids
+* changed array mapping from 000 to 0i 
+
+== 0.2.2
+
+* fixed list for databases without design documents
+* --debug option 
+* changed command line argument order 
+
+== 0.2.1
+
+* First release
