@@ -8,7 +8,7 @@ module Couchquilt
     # initiates a GET request and returns the JSON parsed response
     def get(path)
       response = RestClient.get(url_for(path))
-      JSON.parse(response) rescue response
+      JSON.parse(response.body) rescue response.body
     rescue RestClient::ResourceNotFound
       nil
     end

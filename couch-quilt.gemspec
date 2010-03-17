@@ -9,18 +9,19 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Johannes J\303\266rg Schmidt"]
-  s.date = %q{2010-02-26}
+  s.date = %q{2010-03-17}
   s.default_executable = %q{couchquilt}
   s.description = %q{Access CouchDB JSON documents from filesystem.}
   s.email = %q{schmidt@netzmerk.com}
   s.executables = ["couchquilt"]
   s.extra_rdoc_files = [
-    "README.md"
+    "README.rdoc"
   ]
   s.files = [
     ".gitignore",
+     "CHANGELOG.rdoc",
      "INSTALL",
-     "README.md",
+     "README.rdoc",
      "Rakefile",
      "bin/couchquilt",
      "couch-quilt.gemspec",
@@ -38,7 +39,7 @@ Gem::Specification.new do |s|
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubyforge_project = %q{couch-quilt}
-  s.rubygems_version = %q{1.3.5}
+  s.rubygems_version = %q{1.3.6}
   s.summary = %q{Access CouchDB from filesystem.}
   s.test_files = [
     "spec/spec_helper.rb",
@@ -51,9 +52,18 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency(%q<rest-client>, [">= 1.4.1"])
+      s.add_runtime_dependency(%q<json_pure>, [">= 1.2.2"])
+      s.add_development_dependency(%q<rspec>, [">= 1.2.9"])
     else
+      s.add_dependency(%q<rest-client>, [">= 1.4.1"])
+      s.add_dependency(%q<json_pure>, [">= 1.2.2"])
+      s.add_dependency(%q<rspec>, [">= 1.2.9"])
     end
   else
+    s.add_dependency(%q<rest-client>, [">= 1.4.1"])
+    s.add_dependency(%q<json_pure>, [">= 1.2.2"])
+    s.add_dependency(%q<rspec>, [">= 1.2.9"])
   end
 end
 
