@@ -17,7 +17,7 @@ Read and write CouchDB documents via FUSE userspace filesystem
 
 start quilt by typing
 
-  couchquilt mountpoint [server] [--debug]
+  couchquilt [server] mountpoint [--debug]
 
 
 Your mapped CouchDB will now be available at *mountpoint*.
