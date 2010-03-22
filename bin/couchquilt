@@ -37,20 +37,36 @@ mountpoint = ARGV[1]
 # create mount point if needed
 Dir.mkdir(mountpoint) unless File.directory?(mountpoint)
 
-# init quilt fs
-quilt_fs_class = DEBUG ? Couchquilt::DebuggedFS : Couchquilt::FS
-FuseFS.set_root quilt_fs_class.new(server)
-FuseFS.mount_under mountpoint
-
-# listen for exit signals and unmount fuse
-trap("INT") do
-  puts "ancelling..."
-  FuseFS.unmount
-  FuseFS.exit
-  puts "Bye."
+def maybe_fork
+  if DEBUG
+    yield
+  else
+    p = fork { yield }
+    Process.detach p
+  end
 end
 
-# actually do the Fuse mount
-puts "Quilt maps #{server} to #{mountpoint}"
-puts "Debug mode" if DEBUG
-FuseFS.run
+maybe_fork do
+  # listen for exit signals and unmount fuse
+  trap("EXIT") do
+    puts "ancelling..."
+    FuseFS.unmount
+    FuseFS.exit
+    puts "Bye."
+  end
+
+  # init quilt fs
+  quilt_fs_class = DEBUG ? Couchquilt::DebuggedFS : Couchquilt::FS
+  FuseFS.set_root quilt_fs_class.new(server)
+  FuseFS.mount_under mountpoint
+
+
+  # actually do the Fuse mount
+  # on debug mode we do not run in background
+  puts "Debug mode" if DEBUG
+  puts "Quilt maps #{server} to #{mountpoint}"
+
+  FuseFS.run
+
+end
+
