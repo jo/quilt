@@ -1,3 +1,11 @@
+== 0.4.0
+
+* Changed command line order
+
+== 0.3.1
+
+* adapt new RestClient API
+
 == 0.3.0
 
 * fixed and changed array mapping
