@@ -80,6 +80,12 @@
 
     <p><strong>Tip:</strong> <code>touch _delete</code> will delete a database or document.</p>
 
+    <h2><code>/etc/fstab</code> entry</h2>
+    <p>I like the following line in my <code>/etc/fstab</code>:</p>
+    <pre>
+couchquilt#http://127.0.0.1:5984    /mnt/couch    fuse    rw,nosuid,nodev,user    0 0
+    </pre>
+
     <h2>Digging deeper</h2>
 
     <p>CouchDB is a document based Database System. The documents are stored in JSON format. Documents can have so called attachements, so CouchDB can easyly store files.</p>
