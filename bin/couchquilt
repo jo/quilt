@@ -14,25 +14,24 @@
 #    limitations under the License.
 #
 # usage:
-#  couchquilt ~/quilt http://localhost:5984
-
-QUILT_ROOT = File.expand_path(File.join(File.dirname(__FILE__), ".."))
-require File.join(QUILT_ROOT, "lib/couchquilt")
+#  couchquilt http://localhost:5984 ~/quilt
 
 DEBUG = ARGV.delete("--debug")
-require File.join(File.dirname(__FILE__), '../lib/couchquilt/debugged_fs') if DEBUG
 
-if ARGV.empty?
+require File.expand_path("../../lib/couchquilt", __FILE__)
+require File.expand_path("../../lib/couchquilt/debugged_fs", __FILE__) if DEBUG
+
+# database server url defaults to http://127.0.0.1:5984
+ARGV.unshift "http://127.0.0.1:5984" if !ARGV[1] && ARGV[0] !~ /^-/
+
+server, mountpoint = ARGV
+
+unless server && mountpoint
   puts "usage:"
   puts "couchquilt [server] mountpoint [--debug]"
   exit
 end
 
-# database server url defaults to http://127.0.0.1:5984
-ARGV.unshift "http://127.0.0.1:5984" if ARGV.size < 2
-
-server     = ARGV[0]
-mountpoint = ARGV[1]
 
 # create mount point if needed
 Dir.mkdir(mountpoint) unless File.directory?(mountpoint)
@@ -46,13 +45,12 @@ def maybe_fork
   end
 end
 
+# on debug mode we do not run in background
 maybe_fork do
   # listen for exit signals and unmount fuse
   trap("EXIT") do
-    puts "ancelling..."
     FuseFS.unmount
     FuseFS.exit
-    puts "Bye."
   end
 
   # init quilt fs
@@ -60,13 +58,9 @@ maybe_fork do
   FuseFS.set_root quilt_fs_class.new(server)
   FuseFS.mount_under mountpoint
 
-
   # actually do the Fuse mount
-  # on debug mode we do not run in background
-  puts "Debug mode" if DEBUG
-  puts "Quilt maps #{server} to #{mountpoint}"
+  puts "Quilt maps #{server} to #{mountpoint}" if DEBUG
 
   FuseFS.run
-
 end
 
