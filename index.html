@@ -83,9 +83,7 @@
 
     <h2>fstab entry</h2>
     <p>I like the following line in my <code>/etc/fstab</code>:</p>
-    <pre>
-couchquilt#http://127.0.0.1:5984    /mnt/quilt    fuse    user,noauto    0 0
-    </pre>
+    <pre>couchquilt#http://127.0.0.1:5984    /mnt/quilt    fuse    user,noauto    0 0</pre>
 
     <p>That way I can mount Quilt just with <code>mount /mnt/quilt</code>.<br/>
     Note the <code>noauto</code> option. This is required because it is currently impossible to do the mount on bootup. I don't know why. Do you?
