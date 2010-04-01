@@ -68,7 +68,7 @@ describe Couchquilt::Mapper do
 
   describe "map_fs" do
     before do
-      @json = { :a => 1, :b => 2}
+      @json = { "a" => 1, "b" => { "ab" => 1 }}
     end
 
     it "should remove all contents for empty keys" do
@@ -76,7 +76,25 @@ describe Couchquilt::Mapper do
       result.should == {}
     end
     
-    # TODO: really spec this
+    it "should update a" do
+      result = map_fs(@json, ["a"], 2)
+      result.should == @json.merge("a" => 2)
+    end
+
+    it "should insert c" do
+      result = map_fs(@json, ["c"], 1)
+      result.should == @json.merge("c" => 1)
+    end
+
+    it "should update nested ab" do
+      result = map_fs(@json, ["b", "ab"], 2)
+      result.should == @json.merge("b" => { "ab" => 2 })
+    end
+
+    it "should insert nested ac" do
+      result = map_fs(@json, ["b", "ac"], 1)
+      result.should == @json.merge("b" => { "ab" => 1, "ac" => 1 })
+    end
   end
 
   describe "key_for" do
