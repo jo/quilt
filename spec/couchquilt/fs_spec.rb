@@ -35,7 +35,7 @@ describe Couchquilt::FS do
     }
     RestClient.put File.join(SERVER_NAME, TESTDB, @design_document["_id"]), @design_document.to_json
 
-    @quilt = Couchquilt::DebuggedFS.new("http://127.0.0.1:5984")
+    @quilt = Couchquilt::DebuggedFS.new(SERVER_NAME)
   end
 
   after :all do
@@ -233,6 +233,51 @@ describe Couchquilt::FS do
             @quilt.directory?(@path).should be_true
             @quilt.rmdir(@path).should be_true
             @quilt.directory?(@path).should be_false
+          end
+
+          describe "0i.js" do
+            before do
+              @base_path = "/#{TESTDB}/document_id/unknown_attribute"
+              @path = "#{@base_path}/0i.js"
+              @quilt.mkdir(@base_path)
+            end
+
+            after do
+              @quilt.rmdir(@base_path)
+            end
+
+            it "directory? should return true for base path" do
+              @quilt.directory?(@base_path).should be_true
+            end
+            it "directory? should return false" do
+              @quilt.directory?(@path).should be_false
+            end
+            it "file? should return false" do
+              @quilt.file?(@path).should be_false
+            end
+            it "can_write? should return true" do
+              @quilt.can_write?(@path).should be_true
+            end
+
+            describe "write should change base path to array" do
+              before do
+                @quilt.write_to(@path, "value")
+              end
+
+              after do
+                @quilt.delete(@path)
+              end
+
+              it "should be a file" do
+                @quilt.file?(@path).should be_true
+              end
+
+              it "should be an array" do
+                couch = Couchquilt::CouchClient.new(SERVER_NAME)
+                doc = couch.get("/#{TESTDB}/document_id")
+                doc["unknown_attribute"].should be_an(Array)
+              end
+            end
           end
         end
 

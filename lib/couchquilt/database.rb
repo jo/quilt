@@ -45,6 +45,7 @@ module Couchquilt
 
     # updating documents
     def update(database, id, doc)
+      doc.map_arrays!
       @couch.put("#{database}/#{id}", doc)
     end
 

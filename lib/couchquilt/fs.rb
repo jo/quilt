@@ -82,7 +82,7 @@ module Couchquilt
       when :database_info, :show_function_result, :list_function_result, :uuid
         true
       when :view_function_result
-        # Every javascript or HTML is file, based on extension
+        # Every javascript or HTML is a file, based on extension
         [".js", ".html"].include?(File.extname(path))
       when :document_part
         # look into document
