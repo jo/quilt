@@ -105,7 +105,7 @@ describe "Hash and Array" do
 
     it "should map array value" do
       hash = { "key" => []}
-      hash.to_fs.should == ["key.array"]
+      hash.to_fs.should == ["key"]
     end
   end
 end

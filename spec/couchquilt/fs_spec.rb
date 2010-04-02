@@ -200,7 +200,7 @@ describe Couchquilt::FS do
           @quilt.file?(@path).should be_false
         end
         it "contents should list documents content" do
-          @quilt.contents(@path).should == ["_id.js", "_rev.js", "array.array", "boolean.b.js", "empty", "float.f.js", "integer.i.js", "name.js", "object"]
+          @quilt.contents(@path).should == ["_id.js", "_rev.js", "array", "boolean.b.js", "empty", "float.f.js", "integer.i.js", "name.js", "object"]
         end
         it "can_mkdir? should return false" do
           @quilt.can_mkdir?(@path).should be_false
@@ -343,9 +343,9 @@ describe Couchquilt::FS do
         end
         
         # /database_id/document_id/array
-        describe "array.array/" do
+        describe "array/" do
           before do
-            @path = "/#{TESTDB}/document_id/array.array"
+            @path = "/#{TESTDB}/document_id/array"
           end
 
           it "directory? should return true" do
@@ -367,7 +367,7 @@ describe Couchquilt::FS do
           # /database_id/document_id/array/0i.js
           describe "0i.js" do
             before do
-              @path = "/#{TESTDB}/document_id/array.array/0i.js"
+              @path = "/#{TESTDB}/document_id/array/0i.js"
             end
 
             it "directory? should return false" do
@@ -708,7 +708,7 @@ describe Couchquilt::FS do
                 @quilt.file?(@path).should be_false
               end
               it "contents should list view result document contents" do
-                @quilt.contents(@path).should == ["offset.i.js", "rows.array", "total_rows.i.js"]
+                @quilt.contents(@path).should == ["offset.i.js", "rows", "total_rows.i.js"]
               end
               it "can_mkdir? should return false" do
                 @quilt.can_mkdir?(@path).should be_false
@@ -751,10 +751,10 @@ describe Couchquilt::FS do
                 end
               end
 
-              # /database_id/_design/design_document_id/_view/view_function_name/rows.array
-              describe "rows.array/" do
+              # /database_id/_design/design_document_id/_view/view_function_name/rows
+              describe "rows/" do
                 before do
-                  @path = "/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array"
+                  @path = "/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows"
                 end
 
                 it "directory? should return true" do
@@ -773,10 +773,10 @@ describe Couchquilt::FS do
                   @quilt.can_rmdir?(@path).should be_false
                 end
 
-                # /database_id/_design/design_document_id/_view/view_function_name/rows.array/0i
+                # /database_id/_design/design_document_id/_view/view_function_name/rows/0i
                 describe "0i/" do
                   before do
-                    @path = "/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i"
+                    @path = "/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i"
                   end
 
                   it "directory? should return true" do
@@ -795,10 +795,10 @@ describe Couchquilt::FS do
                     @quilt.can_rmdir?(@path).should be_false
                   end
 
-                  # /database_id/_design/design_document_id/_view/view_function_name/rows.array/0i/id.js
+                  # /database_id/_design/design_document_id/_view/view_function_name/rows/0i/id.js
                   describe "id.js" do
                     before do
-                      @path = "/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/id.js"
+                      @path = "/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/id.js"
                     end
 
                     it "directory? should return false" do
@@ -818,10 +818,10 @@ describe Couchquilt::FS do
                     end
                   end
 
-                  # /database_id/_design/design_document_id/_view/view_function_name/rows.array/0i/key.js
+                  # /database_id/_design/design_document_id/_view/view_function_name/rows/0i/key.js
                   describe "key.js" do
                     before do
-                      @path = "/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/key.js"
+                      @path = "/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/key.js"
                     end
 
                     it "directory? should return false" do
@@ -841,10 +841,10 @@ describe Couchquilt::FS do
                     end
                   end
 
-                  # /database_id/_design/design_document_id/_view/view_function_name/rows.array/0i/value.js
+                  # /database_id/_design/design_document_id/_view/view_function_name/rows/0i/value.js
                   describe "value.js" do
                     before do
-                      @path = "/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows.array/0i/value.js"
+                      @path = "/#{TESTDB}/_design/design_document_id/_view/view_function_name/rows/0i/value.js"
                     end
 
                     it "directory? should return false" do
