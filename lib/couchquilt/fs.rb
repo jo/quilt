@@ -16,39 +16,35 @@ module Couchquilt
   
       list case named_path(path)
            when :root
-             ["_uuids"] + @couch.get("_all_dbs")
+             ["_uuids"] + all_dbs
            when :uuids
              ["0i.js"]
            when :database
              ["_design"] +
                # database meta data
-               map_json(@couch.get(database)) +
+               @couch.get(database).to_fs +
                # all documents but design documents
-               # Note: we can not use ?startkey="_design/"&endkey="_design0" here,
-               # because that would return no results for databases without design documents
-               @couch.get("#{database}/_all_docs")["rows"].map { |r| r["id"] }.select { |id| id !~ /^_design\// }
+               all_doc_ids(database).select { |id| id !~ /^_design\// }
            when :_design
-             query = URI.encode('startkey="_design"&endkey="_design0"')
              # all design documents
-             @couch.get("#{database}/_all_docs?#{query}")["rows"].map { |r| r["id"].sub("_design/", "") }
+             all_doc_ids(database, 'startkey="_design"&endkey="_design0"').map { |id| id.sub("_design/", "") }
            when :_show
-             (@couch.get("#{database}/#{id}")["shows"] || {}).keys
+             document(database, id, "shows").to_fs(false)
            when :_list
-             (@couch.get("#{database}/#{id}")["lists"] || {}).keys
+             document(database, id, "lists").to_fs(false)
            when :_view
-             (@couch.get("#{database}/#{id}")["views"] || {}).keys
+             document(database, id, "views").to_fs(false)
            when :list_function
-             (@couch.get("#{database}/#{id}")["views"] || {}).keys.map { |name| "#{name}.html" }
+             document(database, id, "views").to_fs(false).map { |name| "#{name}.html" }
            when :show_function
-             query = URI.encode('startkey="_design0"')
-             @couch.get("#{database}/_all_docs?#{query}")["rows"].map { |r| "#{r["id"]}.html" }
+             all_doc_ids(database, 'startkey="_design0"').map { |id| "#{id}.html" }
            when :view_function, :view_function_result
-             map_json(get_view_result_part(database, id, parts))
+             view(database, id, parts).to_fs
            when :design_document
              ["_list", "_show", "_view"] +
-               map_json(get_document_part(database, id))
+               document(database, id).to_fs
            else
-             map_json(get_document_part(database, id, parts))
+             document(database, id, parts).to_fs
            end
     end
   
@@ -60,19 +56,19 @@ module Couchquilt
       when :database, :document, :design_document
         @couch.head(path)
       when :view_function_result
-        doc = get_view_result_part(database, id, parts)
+        doc = view(database, id, parts)
         # arrays and hashes are mapped into directories
         doc.is_a?(Hash) || doc.is_a?(Array)
       when :database_info, :show_function_result, :list_function_result, :uuid
         false
-      when nil
+      when :document_part
         # look into document
-        doc = get_document_part(database, id, parts)
+        doc = document(database, id, parts)
         # arrays and hashes are mapped into directories
         doc.is_a?(Hash) || doc.is_a?(Array)
       else
         # all other special paths are directories by now
-        # TODO: thats not so good.
+        # TODO: thats not very good.
         true
       end
     end
@@ -87,9 +83,9 @@ module Couchquilt
       when :view_function_result
         # Every javascript or HTML is file, based on extension
         [".js", ".html"].include?(File.extname(path))
-      when nil
+      when :document_part
         # look into document
-        doc = get_document_part(database, id, parts)
+        doc = document(database, id, parts)
         # only arrays and hashes are mapped into directories
         !doc.nil? && !(doc.is_a?(Hash) || doc.is_a?(Array))
       else
@@ -103,19 +99,15 @@ module Couchquilt
   
       content case named_path(path)
               when :database_info
-                @couch.get(database)[key_for(id)]
-              when :show_function_result
-                parts.shift
-                @couch.get(key_for(File.join(database, id, "_show", *parts)))
-              when :list_function_result
-                parts.shift
-                @couch.get(key_for(File.join(database, id, "_list", *parts)))
+                database_info(database, id)
+              when :show_function_result, :list_function_result
+                function_result(database, id, parts)
               when :view_function_result
-                get_view_result_part(database, id, parts)
+                view(database, id, parts)
               when :uuid
-                get_document_part(database, id, ["uuids"])
+                document(database, id, "uuids")
               else
-                get_document_part(database, id, parts)
+                document(database, id, parts)
               end
     end
   
@@ -139,8 +131,9 @@ module Couchquilt
       str.strip!
       database, id, *parts = extract_parts(path)
       # fetch document
-      doc = @couch.get("#{database}/#{id}")
+      doc = document(database, id)
       # update the value that the file at path holds
+      # TODO: use new update_at_path
       map_fs(doc, parts, str)
       # save document
       @couch.put("#{database}/#{id}", doc)
@@ -164,8 +157,9 @@ module Couchquilt
       database, id, *parts = extract_parts(path)
   
       # fetch document
-      doc = @couch.get("#{database}/#{id}")
+      doc = document(database, id)
       # remove object
+      # TODO: use new update_at_path
       map_fs(doc, parts, nil)
       # save document
       @couch.put("#{database}/#{id}", doc)
@@ -180,9 +174,9 @@ module Couchquilt
         false
       when :database, :document, :design_document
         # can create database or document unless exists
-        !@couch.head(path)
+        !exists?(path)
       else
-        !get_document_part(database, id, parts)
+        !document(database, id, parts)
       end
     end
   
@@ -198,8 +192,9 @@ module Couchquilt
         @couch.put("#{database}/#{id}")
       else
         # fetch document
-        doc = @couch.get("#{database}/#{id}")
+        doc = document(database, id)
         # insert empty object
+        # TODO: use new update_at_path
         map_fs(doc, parts)
         # save document
         @couch.put("#{database}/#{id}", doc)
@@ -214,7 +209,7 @@ module Couchquilt
       when :root, :_design, :_list, :list_function, :_show, :show_function, :_view, :view_function, :view_function_result, :database, :document, :design_document
         false
       else
-        get_document_part(database, id, parts).empty? rescue nil
+        document(database, id, parts).empty? rescue false
       end
     end
   
@@ -224,8 +219,9 @@ module Couchquilt
       database, id, *parts = extract_parts(path)
   
       # fetch document
-      doc = @couch.get("#{database}/#{id}")
+      doc = document(database, id)
       # remove object
+      # TODO: use new update_at_path
       map_fs(doc, parts, nil)
       # save document
       @couch.put("#{database}/#{id}", doc)
@@ -237,9 +233,11 @@ module Couchquilt
   
       case named_path(path)
       when :switch_delete_database
+        # TODO
         @couch.delete(database)
       when :switch_delete_document
-        doc = @couch.get("#{database}/#{id}")
+        doc = document(database, id)
+        # TODO
         @couch.delete("#{database}/#{id}?rev=#{doc["_rev"]}")
       end
     end
@@ -315,37 +313,55 @@ module Couchquilt
         # /database_id/document_id/object
         # /database_id/_design/design_document_id
         # /database_id/_design/design_document_id/object
-        nil
+        :document_part
       end
     end
-  
-    # fetch part of document
-    def get_document_part(database, id, parts = [])
-      doc = @couch.get("#{database}/#{id}")
-      parts.map! { |p| key_for p }
-      get_part(doc, parts)
+
+
+    ## database queries
+    
+    # does a database, document or design_document exists?
+    def exists?(path)
+      @couch.head key_for(path)
     end
-  
-    # get view result, or a part of that document.
-    def get_view_result_part(database, id, parts = [])
+
+    # query for all dbs
+    def all_dbs
+      @couch.get("_all_dbs")
+    end
+
+    # query for database info
+    def database_info(database, part)
+      @couch.get(database).at_path(part)
+    end
+
+    # query for all docs ids
+    def all_doc_ids(database, query_string = nil)
+      path = "#{database}/_all_docs"
+      path << "?#{URI.encode query_string}" if query_string
+      @couch.get(path)["rows"].map { |r| r["id"] }
+    end
+
+    # query for document
+    def document(database, id, parts = [])
+      @couch.get("#{database}/#{id}").at_path(parts)
+    end
+
+    # query for view
+    def view(database, id, parts)
       a, view_function_name, *rest = parts
-      view = [id.sub("_design/", ""), "_view", view_function_name].join("/")
-      doc = @couch.get("#{database}/_design/#{view}")
-      rest.map! { |p| key_for p }
-      get_part(doc, rest)
+      query = [id.sub("_design/", ""), "_view", view_function_name].join("/")
+      doc = @couch.get("#{database}/_design/#{query}").at_path(rest)
     end
-  
-    # get a part of the document
-    # eg: get_part({ :a => { :b => :c}}, [:a, :b]) #=> :c
-    def get_part(doc, keys = [])
-      return if doc.nil?
-      doc = doc.dup
-      keys.each do |key|
-        doc = doc[key]
-      end
-      doc
+
+    # query a function
+    def function_result(database, id, parts)
+      @couch.get key_for(File.join(database, id, *parts))
     end
-  
+
+
+    ## list and content helper
+
     # escapes the value for using as filename
     def list(array)
       return [] if array.nil?

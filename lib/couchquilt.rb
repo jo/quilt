@@ -29,6 +29,8 @@ $:.unshift File.dirname(__FILE__) unless
     $:.include?(File.expand_path(File.dirname(__FILE__)))
 
 require 'couchquilt/mapper'
+require 'couchquilt/core_ext/array'
+require 'couchquilt/core_ext/hash'
 require 'couchquilt/couch_client'
 require 'couchquilt/fs'
 
