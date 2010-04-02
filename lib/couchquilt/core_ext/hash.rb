@@ -2,9 +2,7 @@ class Hash
   include Couchquilt::Mapper
 
   def at_path(path)
-    parts = path.is_a?(Array) ? path.dup : path.split("/")
-    parts.map! { |p| key_for p }
-    head = parts.shift
+    head, *parts = to_parts(path)
     return self if head.nil?
     part = self[head]
     return part if parts.empty? || !part.respond_to?(:at_path)
@@ -12,21 +10,19 @@ class Hash
   end
 
   def update_at_path(path, value)
-    current = self
-    
-    parts = path.is_a?(Array) ? path.dup : path.split("/")
-    key = parts.pop
+    head, *parts = to_parts(path)
+    return if head.nil?
+    return self[head] = value if parts.empty?
+    self[head] ||= {}
+    self[head].update_at_path(parts, value)
+  end
 
-    return self unless key
-
-    parts.each do |part|
-      current[part] ||= {}
-      current = current[part]
-      
-      raise 'updating value at %s failed!' % inspect unless current.is_a?(self.class)
-    end
-
-    current[key] = value
+  def delete_at_path(path)
+    head, *parts = to_parts(path)
+    return if head.nil?
+    return self.delete(head) if parts.empty?
+    return unless self[head]
+    self[head].delete_at_path(parts)
   end
 
   def to_fs(named_path = true)

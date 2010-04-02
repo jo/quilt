@@ -58,6 +58,20 @@ describe "Hash and Array" do
     end
   end
 
+  describe "delete_at_path" do
+    it "should delete value at top level" do
+      hash = { "a" => 1, "b" => 1 }
+      hash.delete_at_path "a"
+      hash.should == { "b" => 1 }
+    end
+
+    it "should delete value at nested level" do
+      hash = { "a" => { "b" => 1, "c" => 1 } }
+      hash.delete_at_path "a/b"
+      hash.should == { "a" => { "c" => 1 } }
+    end
+  end
+
   describe "to_fs" do
     it "should map string value" do
       hash = { "key" => "value" }

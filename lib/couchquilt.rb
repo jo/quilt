@@ -32,6 +32,7 @@ require 'couchquilt/mapper'
 require 'couchquilt/core_ext/array'
 require 'couchquilt/core_ext/hash'
 require 'couchquilt/couch_client'
+require 'couchquilt/database'
 require 'couchquilt/fs'
 
 

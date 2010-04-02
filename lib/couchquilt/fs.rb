@@ -4,6 +4,7 @@ require 'uri'
 module Couchquilt
   class FS
     include Mapper
+    include Database
 
     # initializes Quilt FS with the database server name
     def initialize(server_name)
@@ -22,7 +23,7 @@ module Couchquilt
            when :database
              ["_design"] +
                # database meta data
-               @couch.get(database).to_fs +
+                database_info(database, id).to_fs +
                # all documents but design documents
                all_doc_ids(database).select { |id| id !~ /^_design\// }
            when :_design
@@ -54,7 +55,7 @@ module Couchquilt
   
       case named_path(path)
       when :database, :document, :design_document
-        @couch.head(path)
+        exists?(path)
       when :view_function_result
         doc = view(database, id, parts)
         # arrays and hashes are mapped into directories
@@ -133,10 +134,9 @@ module Couchquilt
       # fetch document
       doc = document(database, id)
       # update the value that the file at path holds
-      # TODO: use new update_at_path
-      map_fs(doc, parts, str)
+      doc.update_at_path(parts, str)
       # save document
-      @couch.put("#{database}/#{id}", doc)
+      update(database, id, doc)
     end
   
     # can I delete path?
@@ -159,10 +159,9 @@ module Couchquilt
       # fetch document
       doc = document(database, id)
       # remove object
-      # TODO: use new update_at_path
-      map_fs(doc, parts, nil)
+      doc.delete_at_path(parts)
       # save document
-      @couch.put("#{database}/#{id}", doc)
+      update(database, id, doc)
     end
   
     # can I make a directory at path?
@@ -187,17 +186,16 @@ module Couchquilt
   
       case named_path(path)
       when :database
-        @couch.put(database)
+        create(database)
       when :document, :design_document
-        @couch.put("#{database}/#{id}")
+        create(database, id)
       else
         # fetch document
         doc = document(database, id)
         # insert empty object
-        # TODO: use new update_at_path
-        map_fs(doc, parts)
+        doc.update_at_path(parts, {})
         # save document
-        @couch.put("#{database}/#{id}", doc)
+        update(database, id, doc)
       end
     end
   
@@ -221,10 +219,9 @@ module Couchquilt
       # fetch document
       doc = document(database, id)
       # remove object
-      # TODO: use new update_at_path
-      map_fs(doc, parts, nil)
+      doc.delete_at_path(parts)
       # save document
-      @couch.put("#{database}/#{id}", doc)
+      update(database, id, doc)
     end
   
     # switch to delete a database or document
@@ -233,12 +230,9 @@ module Couchquilt
   
       case named_path(path)
       when :switch_delete_database
-        # TODO
-        @couch.delete(database)
+        delete_database(database)
       when :switch_delete_document
-        doc = document(database, id)
-        # TODO
-        @couch.delete("#{database}/#{id}?rev=#{doc["_rev"]}")
+        delete_document(database, id)
       end
     end
   
@@ -315,48 +309,6 @@ module Couchquilt
         # /database_id/_design/design_document_id/object
         :document_part
       end
-    end
-
-
-    ## database queries
-    
-    # does a database, document or design_document exists?
-    def exists?(path)
-      @couch.head key_for(path)
-    end
-
-    # query for all dbs
-    def all_dbs
-      @couch.get("_all_dbs")
-    end
-
-    # query for database info
-    def database_info(database, part)
-      @couch.get(database).at_path(part)
-    end
-
-    # query for all docs ids
-    def all_doc_ids(database, query_string = nil)
-      path = "#{database}/_all_docs"
-      path << "?#{URI.encode query_string}" if query_string
-      @couch.get(path)["rows"].map { |r| r["id"] }
-    end
-
-    # query for document
-    def document(database, id, parts = [])
-      @couch.get("#{database}/#{id}").at_path(parts)
-    end
-
-    # query for view
-    def view(database, id, parts)
-      a, view_function_name, *rest = parts
-      query = [id.sub("_design/", ""), "_view", view_function_name].join("/")
-      doc = @couch.get("#{database}/_design/#{query}").at_path(rest)
-    end
-
-    # query a function
-    def function_result(database, id, parts)
-      @couch.get key_for(File.join(database, id, *parts))
     end
 
 

@@ -28,6 +28,12 @@ module Couchquilt
 
     private
 
+    def to_parts(path = nil)
+      return [] unless path
+      parts = path.is_a?(Array) ? path.dup : path.split("/")
+      parts.map! { |p| key_for p }
+    end
+
     # remove fs mapping extnames
     # and converts array entry mappings
     def key_for(name)
