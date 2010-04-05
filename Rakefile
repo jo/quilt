@@ -32,6 +32,7 @@ begin
     s.rubyforge_project = "couch-quilt"
     s.add_dependency "rest-client", ">= 1.4.1"
     s.add_dependency "json_pure", ">= 1.2.2"
+    s.add_dependency "fusefs", ">= 0.7.0"
     s.add_development_dependency "rspec", ">= 1.2.9"
     #s.files =  FileList["[A-Z]*(.rdoc)", "{bin,lib,spec}/**/*", "README.md", "INSTALL", "Rakefile"]
   end
