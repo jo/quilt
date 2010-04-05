@@ -1,3 +1,17 @@
+== 0.5.1
+
+use fusefs gem
+
+== 0.5.0
+
+* auto detect arrays from content
+* do not append .array to array dirs 
+
+== 0.4.1
+
+* run in background
+* silent
+
 == 0.4.0
 
 * Changed command line order
