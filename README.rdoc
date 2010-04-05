@@ -3,11 +3,6 @@
 Read and write CouchDB documents via FUSE userspace filesystem
 
 
-== Install dependencies
-
-  apt-get install ruby rubygems libfusefs-ruby
-
-
 == Install Quilt
 
   gem install couch-quilt
